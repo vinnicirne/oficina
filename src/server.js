@@ -60,29 +60,8 @@ let dbConnection;
       roles: 'manager' 
     }, true).then(async (admin) => {
        await dbModels.user.updateUser(admin._id, { roles: 'manager' });
-       console.log('Admin criado com role manager. Semeando clientes...');
-       const cliente = await dbModels.user.createUser({
-         email: 'carlos@cliente.com',
-         password: '123',
-         firstName: 'Carlos',
-         lastName: 'Silva',
-         roles: 'user',
-         limiteCredito: 1500,
-         dataNascimento: '1985-07-22'
-       }, true);
-       
-       await dbModels.repair.addRepair({
-         clientId: cliente._id.toString(),
-         businessUnit: 'OFICINA',
-         status: 'ORCAMENTO',
-         servicoSolicitado: 'Troca de Pastilhas (Toyota Corolla DEF-5555)',
-         materiais: [
-           { descricao: 'Pastilha de Freio', quantidade: 1, precoUnitario: 450, total: 450 }, 
-           { descricao: 'Mão de Obra', quantidade: 2, precoUnitario: 200, total: 400 }
-         ]
-       });
-       console.log('Seed completo!');
-    }).catch(e => console.log('Erro no seed (ignorável):', e.message));
+       console.log('Admin default (oss@servicos.com) garantido com sucesso!');
+    }).catch(e => console.log('Admin já existe ou erro no seed:', e.message));
 
     routes(express, app, controllers(dbModels));
 

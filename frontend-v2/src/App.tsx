@@ -549,6 +549,7 @@ const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState('');
   const [novaOSForm, setNovaOSForm] = useState({ clientId: '', equipmentId: '', placa: '', servicos: [], observacao: '', status: 'ORCAMENTO' });
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleCreateOS = async (e) => {
     e.preventDefault();
@@ -618,28 +619,67 @@ const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose
             </div>
           </div>
           <div style={{marginBottom: '1rem'}}>
-            <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Serviços Solicitados (Selecione um ou mais)</label>
-            <div style={{display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto', padding: '0.8rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#fafafa'}}>
-              {(inventories || []).map(i => {
-                const isSelected = novaOSForm.servicos.includes(i.descricao);
-                return (
-                  <label key={i.id || i._id} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '0.3rem', 
-                    padding: '0.5rem 1rem', borderRadius: '20px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
-                    background: isSelected ? 'var(--accent-main)' : '#fff', 
-                    color: isSelected ? '#fff' : 'var(--text-secondary)', 
-                    border: `1px solid ${isSelected ? 'var(--accent-main)' : '#e2e8f0'}`,
-                    transition: 'all 0.2s', userSelect: 'none'
-                  }}>
-                    <input type="checkbox" style={{display: 'none'}} checked={isSelected} onChange={(e) => {
-                      if (e.target.checked) setNovaOSForm({...novaOSForm, servicos: [...novaOSForm.servicos, i.descricao]});
-                      else setNovaOSForm({...novaOSForm, servicos: novaOSForm.servicos.filter(s => s !== i.descricao)});
-                    }} />
-                    {i.descricao}
-                  </label>
-                );
-              })}
-              {inventories?.length === 0 && <div style={{color: 'var(--text-secondary)', fontSize: '0.9rem'}}>Nenhum serviço cadastrado no sistema.</div>}
+            <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Serviços Solicitados (Pesquise e Adicione)</label>
+            
+            {/* Input de Busca */}
+            <div style={{position: 'relative'}}>
+              <input 
+                type="text" 
+                placeholder="🔍 Digite para buscar um serviço ou peça..." 
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}}
+              />
+              {/* Dropdown de Sugestões */}
+              {searchTerm && (
+                <div style={{
+                  position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', 
+                  border: '1px solid #e2e8f0', borderRadius: '8px', marginTop: '4px', 
+                  maxHeight: '200px', overflowY: 'auto', zIndex: 10, boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}>
+                  {(inventories || [])
+                    .filter(i => i.descricao.toLowerCase().includes(searchTerm.toLowerCase()) && !novaOSForm.servicos.includes(i.descricao))
+                    .map(i => (
+                      <div 
+                        key={i.id || i._id} 
+                        style={{padding: '0.8rem', cursor: 'pointer', borderBottom: '1px solid #f1f5f9'}}
+                        onClick={() => {
+                          setNovaOSForm({...novaOSForm, servicos: [...novaOSForm.servicos, i.descricao]});
+                          setSearchTerm('');
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        {i.descricao}
+                      </div>
+                  ))}
+                  {(inventories || []).filter(i => i.descricao.toLowerCase().includes(searchTerm.toLowerCase()) && !novaOSForm.servicos.includes(i.descricao)).length === 0 && (
+                    <div style={{padding: '0.8rem', color: 'var(--text-secondary)'}}>Nenhum serviço não selecionado encontrado.</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Pills Selecionados */}
+            <div style={{display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.8rem'}}>
+              {novaOSForm.servicos.map(s => (
+                <div key={s} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem', 
+                  padding: '0.4rem 0.8rem', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600,
+                  background: 'var(--accent-main)', color: '#fff'
+                }}>
+                  {s}
+                  <button 
+                    type="button" 
+                    onClick={() => setNovaOSForm({...novaOSForm, servicos: novaOSForm.servicos.filter(item => item !== s)})}
+                    style={{background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1rem', padding: 0, display: 'flex', alignItems: 'center'}}
+                    title="Remover"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {novaOSForm.servicos.length === 0 && <div style={{color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem'}}>Nenhum serviço selecionado.</div>}
             </div>
           </div>
           <div style={{marginBottom: '1rem'}}>

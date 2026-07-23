@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from './services/api';
 import './index.css';
 
-const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate }) => {
+const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS }) => {
   const [showBirthdays, setShowBirthdays] = useState(false);
   const [filterDay, setFilterDay] = useState('');
   const [filterMonth, setFilterMonth] = useState('');
@@ -147,7 +147,7 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate }) => {
           {repairs.map(r => {
              const client = getClient(r.clientId);
              return (
-              <tr key={r._id}>
+              <tr key={r._id} style={{cursor: 'pointer'}} onClick={() => onOpenOS && onOpenOS(r)} title="Clique para ver detalhes">
                 <td style={{color: 'var(--text-primary)', fontWeight: 600}}>{r._id.slice(-6)}</td>
                 <td><div style={{fontWeight: 600}}>{client.firstName} {client.lastName}</div></td>
                 <td><div style={{fontWeight: 500, color: 'var(--text-secondary)'}}>{r.equipmentId || '-'}</div></td>
@@ -1087,7 +1087,7 @@ const EditorDeOS = ({ repair, fetchRepairs, inventories, onClose }) => {
   );
 };
 
-const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onNavigate }) => {
+const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onNavigate, initialOpenOS, onClearInitialOS }) => {
   const [selectedOS, setSelectedOS] = useState(null);
   const [printOS, setPrintOS] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -1098,6 +1098,13 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
   const [viewingService, setViewingService] = useState(null);
 
   const [editingOS, setEditingOS] = useState(null);
+
+  useEffect(() => {
+    if (initialOpenOS) {
+      setPrintOS(initialOpenOS);
+      if (onClearInitialOS) onClearInitialOS();
+    }
+  }, [initialOpenOS, onClearInitialOS]);
 
   const emExecucao = repairs.filter(r => ['EM_EXECUCAO', 'FINALIZADO', 'CONCLUIDO', 'PAGO', 'AGUARDANDO_APROVACAO'].includes(r.status));
   const getClient = (id) => clients.find(u => u.id === id || u._id === id) || {};
@@ -1463,6 +1470,7 @@ const Estoque = ({ inventories, fetchInventories, businessUnit }) => {
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [globalOpenOS, setGlobalOpenOS] = useState(null);
   const [businessUnit, setBusinessUnit] = useState(localStorage.getItem('unit') || 'OFICINA');
   const [user, setUser] = useState(null);
   
@@ -1509,9 +1517,9 @@ function App() {
 
   const renderContent = () => {
     switch(activeTab) {
-      case 'dashboard': return <Dashboard businessUnit={businessUnit} users={usersList} clients={clientsList} repairs={repairsList} onNavigate={setActiveTab} />;
+      case 'dashboard': return <Dashboard businessUnit={businessUnit} users={usersList} clients={clientsList} repairs={repairsList} onNavigate={setActiveTab} onOpenOS={(os) => { setGlobalOpenOS(os); setActiveTab('ordens'); }} />;
       case 'clientes': return <Clientes clients={clientsList} fetchClients={fetchData} />;
-      case 'ordens': return <Ordens clients={clientsList} repairs={repairsList} fetchRepairs={fetchData} businessUnit={businessUnit} inventories={inventoriesList} onNavigate={setActiveTab} />;
+      case 'ordens': return <Ordens clients={clientsList} repairs={repairsList} fetchRepairs={fetchData} businessUnit={businessUnit} inventories={inventoriesList} onNavigate={setActiveTab} initialOpenOS={globalOpenOS} onClearInitialOS={() => setGlobalOpenOS(null)} />;
       case 'orcamentos': return <OrcamentoToOS clients={clientsList} repairs={repairsList} fetchRepairs={fetchData} inventories={inventoriesList} onNavigate={setActiveTab} />;
       case 'estoque': return <Estoque inventories={inventoriesList} fetchInventories={fetchData} businessUnit={businessUnit} />;
       default: return <div style={{padding: '2rem'}}>Em construção...</div>;

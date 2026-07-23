@@ -1561,6 +1561,7 @@ function App() {
     { id: 'ordens', label: 'Ordens de Serviço', icon: '🔧' },
     { id: 'estoque', label: 'Estoque & Serviços', icon: '📦' },
     { id: 'faturamento', label: 'Faturamento', icon: '💰' },
+    { id: 'configuracoes', label: 'Configurações', icon: '⚙️' },
   ];
 
   return (

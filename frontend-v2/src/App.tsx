@@ -152,7 +152,7 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS
                 <td><div style={{fontWeight: 600}}>{client.firstName} {client.lastName}</div></td>
                 <td><div style={{fontWeight: 500, color: 'var(--text-secondary)'}}>{r.equipmentId || '-'}</div></td>
                 <td><div style={{fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase'}}>{r.defeitoInformado || '-'}</div></td>
-                <td><div style={{maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={r.servicoSolicitado} onClick={() => alert(r.servicoSolicitado)}>{r.servicoSolicitado}</div></td>
+                <td><div style={{maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={r.servicoSolicitado}>{r.servicoSolicitado}</div></td>
                 <td><span className={`badge ${r.status === 'EM_EXECUCAO' ? 'in-progress' : 'pending'}`}>{r.status}</span></td>
               </tr>
              )

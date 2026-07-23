@@ -1,6 +1,6 @@
 const config = require('common/config/config');
 
-const routes = (express, app, { user, client, access, role, repair, inventory }) => {
+const routes = (express, app, { user, client, access, role, repair, inventory, transaction }) => {
   const route = express.Router();
 
   route.post('/auth/login', user.validateLogin, access.performLogin);
@@ -39,6 +39,10 @@ const routes = (express, app, { user, client, access, role, repair, inventory })
   route.put('/inventories/:inventoryId', access.verifyAuth(), user.populateTokenUser(), inventory.updateInventory);
   route.get('/inventories/:inventoryId', access.verifyAuth(), user.populateTokenUser(), inventory.showInventory);
   route.delete('/inventories/:inventoryId', access.verifyAuth(), user.populateTokenUser(), inventory.removeInventory);
+
+  route.get('/transactions', access.verifyAuth(), user.populateTokenUser(), transaction.getTransactions);
+  route.post('/transactions', access.verifyAuth(), user.populateTokenUser(), transaction.addTransaction);
+  route.put('/transactions/:transactionId/pay', access.verifyAuth(), user.populateTokenUser(), transaction.payTransaction);
 
   app.use(`/api/${config.server.version}`, route);
 };

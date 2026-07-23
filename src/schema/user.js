@@ -18,6 +18,9 @@ const user = {
   dataNascimento: { type: 'string' },
   limiteCredito: { type: 'number', 'm-default': 0 },
   creditScore: { type: 'number', 'm-default': 500 },
+  diaVencimento: { type: 'number', 'm-default': 10 },
+  creditStatus: { type: 'string', enum: ['ACTIVE', 'BLOCKED'], 'm-default': 'ACTIVE' },
+  totalSpent: { type: 'number', 'm-default': 0 },
   
   // Endereço (SAT)
   endereco: { type: 'string' },

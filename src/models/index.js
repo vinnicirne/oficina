@@ -17,6 +17,8 @@ const Inventory = require('models/inventory');
 const inventorySchema = require('schema/inventory');
 const Invoice = require('models/invoice');
 const invoiceSchema = require('schema/invoice');
+const Transaction = require('models/transaction');
+const transactionSchema = require('schema/transaction');
 
 module.exports = db => ({
   user: new User({
@@ -68,5 +70,11 @@ module.exports = db => ({
     schema: mongooseSchema(invoiceSchema.postSchema),
     tableName: invoiceSchema.tableName,
     jsonSchema: invoiceSchema,
+  }),
+  transaction: new Transaction({
+    db,
+    schema: mongooseSchema(transactionSchema.postSchema),
+    tableName: transactionSchema.tableName,
+    jsonSchema: transactionSchema,
   }),
 });

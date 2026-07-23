@@ -164,8 +164,105 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate }) => {
   );
 };
 
+const ClientCreditProfile = ({ client, onClose, onUpdateClient }) => {
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, [client]);
+
+  const fetchTransactions = async () => {
+    try {
+      const res = await api.get(`/transactions?clientId=${client._id || client.id}`);
+      setTransactions(res.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePay = async (txId) => {
+    try {
+      await api.put(`/transactions/${txId}/pay`);
+      fetchTransactions();
+      onUpdateClient(); // refresh client data to update score
+    } catch (e) {
+      alert('Erro ao processar pagamento');
+    }
+  };
+
+  const score = client.creditScore || 500;
+  const statusColor = score >= 700 ? 'var(--accent-success)' : score < 400 ? 'var(--accent-main)' : '#f59e0b';
+  const statusText = score >= 700 ? 'BOM PAGADOR' : score < 400 ? 'MAL PAGADOR' : 'INTERMEDIÁRIO';
+
+  return (
+    <div className="glass-card" style={{padding: '2rem'}}>
+      <div style={{display:'flex', justifyContent:'space-between', marginBottom: '1.5rem'}}>
+        <h3 className="section-title" style={{margin: 0}}>Perfil Financeiro: {client.firstName}</h3>
+        <button className="btn-primary" style={{background: 'var(--text-secondary)'}} onClick={onClose}>⬅️ Voltar</button>
+      </div>
+
+      <div style={{display: 'flex', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap'}}>
+        <div style={{flex: '1 1 250px', textAlign: 'center', padding: '2rem', background: '#f8fafc', borderRadius: '12px', border: `2px solid ${statusColor}`}}>
+          <div style={{fontSize: '3.5rem', fontWeight: 800, color: statusColor}}>{score}</div>
+          <div style={{fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)'}}>Score de Crédito</div>
+          <div style={{marginTop: '0.8rem', display: 'inline-block', padding: '0.4rem 1.2rem', background: statusColor, color: '#fff', borderRadius: '20px', fontWeight: 700, fontSize: '0.9rem'}}>
+            {statusText}
+          </div>
+        </div>
+        <div style={{flex: '2 1 300px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1.2rem', padding: '1rem'}}>
+           <div style={{fontSize: '1.1rem'}}><strong>Status do Cliente:</strong> <span style={{color: client.creditStatus === 'BLOCKED' ? 'var(--accent-main)' : 'var(--accent-success)', fontWeight: 700}}>{client.creditStatus === 'BLOCKED' ? 'BLOQUEADO' : 'ATIVO'}</span></div>
+           <div style={{fontSize: '1.1rem'}}><strong>Cliente Recorrente:</strong> {transactions.length > 2 ? 'Sim 🌟' : 'Não'}</div>
+           <div style={{fontSize: '1.1rem'}}><strong>LTV (Total Gasto):</strong> R$ {(client.totalSpent || 0).toFixed(2)}</div>
+           <div style={{fontSize: '1.1rem'}}><strong>Vencimento Padrão:</strong> Todo dia {client.diaVencimento || 10}</div>
+           {score >= 700 && <div style={{color: 'var(--accent-success)', fontWeight: 600, marginTop: '0.5rem'}}>💡 Sugestão: Este é um excelente cliente, considere aumentar o limite de crédito dele a cada 3 meses!</div>}
+           {score < 400 && <div style={{color: 'var(--accent-main)', fontWeight: 600, marginTop: '0.5rem'}}>⚠️ Cuidado: Este cliente possui histórico frequente de atrasos. Não ofereça limite alto.</div>}
+        </div>
+      </div>
+
+      <h4 style={{marginBottom: '1rem', fontSize: '1.2rem', color: 'var(--text-primary)'}}>Histórico de Faturas e Serviços</h4>
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>Vencimento</th>
+            <th>Descrição</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {transactions.map(tx => {
+            const isOverdue = new Date() > new Date(tx.dataVencimento) && tx.status === 'PENDING';
+            return (
+            <tr key={tx._id || tx.id}>
+              <td>{new Date(tx.dataVencimento).toLocaleDateString('pt-BR')}</td>
+              <td>{tx.descricao}</td>
+              <td style={{fontWeight: 600}}>R$ {tx.valor}</td>
+              <td>
+                <span className={`badge ${tx.status === 'PAID' ? 'in-progress' : isOverdue ? 'pending' : ''}`} style={isOverdue ? {background: 'var(--accent-main)', color: '#fff'} : tx.status === 'PENDING' ? {background: '#f59e0b', color: '#fff'} : {}}>
+                  {tx.status === 'PAID' ? 'PAGO' : isOverdue ? 'EM ATRASO' : 'A PAGAR'}
+                </span>
+              </td>
+              <td>
+                {tx.status === 'PENDING' && (
+                  <button className="btn-primary" style={{padding: '0.4rem 0.8rem', fontSize: '0.8rem'}} onClick={() => handlePay(tx._id || tx.id)}>💳 Registrar Pagamento</button>
+                )}
+              </td>
+            </tr>
+          )})}
+          {transactions.length === 0 && <tr><td colSpan={5}>Nenhuma movimentação encontrada.</td></tr>}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 const Clientes = ({ clients, fetchClients }) => {
   const [showModal, setShowModal] = useState(false);
+  const [viewingCredit, setViewingCredit] = useState(null);
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState('');
   
@@ -185,7 +282,9 @@ const Clientes = ({ clients, fetchClients }) => {
     bairro: '',
     cidade: '',
     cep: '',
-    uf: ''
+    uf: '',
+    diaVencimento: '10',
+    creditStatus: 'ACTIVE'
   });
 
   const resetForm = () => {
@@ -214,7 +313,9 @@ const Clientes = ({ clients, fetchClients }) => {
       bairro: client.bairro || '',
       cidade: client.cidade || '',
       cep: client.cep || '',
-      uf: client.uf || ''
+      uf: client.uf || '',
+      diaVencimento: client.diaVencimento || '10',
+      creditStatus: client.creditStatus || 'ACTIVE'
     });
     setShowModal(true);
   };
@@ -283,6 +384,10 @@ const Clientes = ({ clients, fetchClients }) => {
       setLoading(false);
     }
   };
+
+  if (viewingCredit) {
+    return <ClientCreditProfile client={viewingCredit} onClose={() => setViewingCredit(null)} onUpdateClient={() => { fetchClients(); setViewingCredit(null); }} />;
+  }
 
   if (showModal) {
     return (
@@ -371,9 +476,22 @@ const Clientes = ({ clients, fetchClients }) => {
           </div>
 
           <h4 style={{margin: '1rem 0 -0.5rem 0', color: 'var(--text-secondary)'}}>Financeiro</h4>
-          <div>
-            <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Limite de Crédito Inicial (R$)</label>
-            <input type="number" value={formData.limiteCredito} onChange={e => setFormData({...formData, limiteCredito: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
+          <div style={{display: 'flex', gap: '1rem'}}>
+            <div style={{flex: 1}}>
+              <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Limite de Crédito Inicial (R$)</label>
+              <input type="number" value={formData.limiteCredito} onChange={e => setFormData({...formData, limiteCredito: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
+            </div>
+            <div style={{flex: 1}}>
+              <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Dia de Vencimento Padrão</label>
+              <input type="number" min="1" max="31" value={formData.diaVencimento} onChange={e => setFormData({...formData, diaVencimento: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
+            </div>
+            <div style={{flex: 1}}>
+              <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Status do Crédito</label>
+              <select value={formData.creditStatus} onChange={e => setFormData({...formData, creditStatus: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
+                <option value="ACTIVE">ATIVO</option>
+                <option value="BLOCKED">BLOQUEADO</option>
+              </select>
+            </div>
           </div>
 
           {mensagem && (
@@ -414,6 +532,7 @@ const Clientes = ({ clients, fetchClients }) => {
               <td>{c.phone || '-'}</td>
               <td style={{fontWeight: 600, color: 'var(--accent-success)'}}>R$ {c.limiteCredito || 0}</td>
               <td style={{textAlign: 'right'}}>
+                <button onClick={() => setViewingCredit(c)} style={{background: 'transparent', border: 'none', cursor: 'pointer', marginRight: '10px', fontSize: '1.2rem'}} title="Ver Crédito">💳</button>
                 <button onClick={() => handleEdit(c)} style={{background: 'transparent', border: 'none', cursor: 'pointer', marginRight: '10px', fontSize: '1.2rem'}} title="Editar">✏️</button>
                 <button onClick={() => handleDelete(c)} style={{background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem'}} title="Excluir">🗑️</button>
               </td>

@@ -150,10 +150,33 @@ class RepairController {
 
       // Se for mudar para Crédito Interno (e não era antes)
       if (paymentMethod === 'CreditoInterno' && repair.paymentMethod !== 'CreditoInterno') {
+         if (client.creditStatus === 'BLOCKED') {
+            return res.status(400).send({ error: 'Cliente bloqueado por mau pagamento.' });
+         }
          if ((client.limiteCredito || 0) < totalOS) {
             return res.status(400).send({ error: 'Limite de crédito insuficiente.' });
          }
          await clientMongooseModel.findByIdAndUpdate(client._id, { limiteCredito: client.limiteCredito - totalOS });
+         
+         // Lançar na fatura (Transaction)
+         const transactionModel = this.model.db.model('transactions');
+         const hoje = new Date();
+         let v = new Date(hoje.getFullYear(), hoje.getMonth(), client.diaVencimento || 10);
+         if (v < hoje) {
+           v.setMonth(v.getMonth() + 1);
+         }
+         await transactionModel.create({
+            clientId: client._id,
+            repairId: repair._id,
+            descricao: `O.S. ${repair.servicoSolicitado || 'Serviço'}`,
+            valor: totalOS,
+            tipo: 'DEBT',
+            status: 'PENDING',
+            dataVencimento: v.toISOString(),
+            businessUnit: repair.businessUnit || 'OFICINA',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+         });
       }
 
       // Se era Crédito Interno e agora mudou para outro método (estorno)

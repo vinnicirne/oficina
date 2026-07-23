@@ -548,12 +548,12 @@ const Clientes = ({ clients, fetchClients }) => {
 const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose, onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState('');
-  const [novaOSForm, setNovaOSForm] = useState({ clientId: '', equipmentId: '', placa: '', servicoSolicitado: '', observacao: '', status: 'ORCAMENTO' });
+  const [novaOSForm, setNovaOSForm] = useState({ clientId: '', equipmentId: '', placa: '', servicos: [], observacao: '', status: 'ORCAMENTO' });
 
   const handleCreateOS = async (e) => {
     e.preventDefault();
-    if (!novaOSForm.clientId || !novaOSForm.servicoSolicitado) {
-      setMensagem('Preencha todos os campos.');
+    if (!novaOSForm.clientId || novaOSForm.servicos.length === 0) {
+      setMensagem('Preencha todos os campos e selecione pelo menos um serviço.');
       return;
     }
     setLoading(true);
@@ -562,7 +562,7 @@ const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose
       await api.post(`/clients/${novaOSForm.clientId}/repairs`, {
         equipmentId: novaOSForm.equipmentId,
         defeitoInformado: novaOSForm.placa,
-        servicoSolicitado: novaOSForm.servicoSolicitado,
+        servicoSolicitado: novaOSForm.servicos.join(', '),
         observacao: novaOSForm.observacao,
         status: novaOSForm.status,
         businessUnit
@@ -618,13 +618,29 @@ const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose
             </div>
           </div>
           <div style={{marginBottom: '1rem'}}>
-            <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Serviço Solicitado (Resumo)</label>
-            <select value={novaOSForm.servicoSolicitado} onChange={e => setNovaOSForm({...novaOSForm, servicoSolicitado: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
-              <option value="">Selecione um Serviço...</option>
-              {(inventories || []).map(i => (
-                <option key={i.id || i._id} value={i.descricao}>{i.descricao}</option>
-              ))}
-            </select>
+            <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Serviços Solicitados (Selecione um ou mais)</label>
+            <div style={{display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '180px', overflowY: 'auto', padding: '0.8rem', border: '1px solid #e2e8f0', borderRadius: '8px', background: '#fafafa'}}>
+              {(inventories || []).map(i => {
+                const isSelected = novaOSForm.servicos.includes(i.descricao);
+                return (
+                  <label key={i.id || i._id} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '0.3rem', 
+                    padding: '0.5rem 1rem', borderRadius: '20px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600,
+                    background: isSelected ? 'var(--accent-main)' : '#fff', 
+                    color: isSelected ? '#fff' : 'var(--text-secondary)', 
+                    border: `1px solid ${isSelected ? 'var(--accent-main)' : '#e2e8f0'}`,
+                    transition: 'all 0.2s', userSelect: 'none'
+                  }}>
+                    <input type="checkbox" style={{display: 'none'}} checked={isSelected} onChange={(e) => {
+                      if (e.target.checked) setNovaOSForm({...novaOSForm, servicos: [...novaOSForm.servicos, i.descricao]});
+                      else setNovaOSForm({...novaOSForm, servicos: novaOSForm.servicos.filter(s => s !== i.descricao)});
+                    }} />
+                    {i.descricao}
+                  </label>
+                );
+              })}
+              {inventories?.length === 0 && <div style={{color: 'var(--text-secondary)', fontSize: '0.9rem'}}>Nenhum serviço cadastrado no sistema.</div>}
+            </div>
           </div>
           <div style={{marginBottom: '1rem'}}>
             <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Observação Escrita (Opcional)</label>

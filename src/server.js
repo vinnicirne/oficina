@@ -14,13 +14,19 @@ const app = express();
 let dbConnection;
 
 (async () => {
-  try {
-    const { MongoMemoryServer } = require('mongodb-memory-server');
-    const mongod = await MongoMemoryServer.create({ binary: { version: '5.0.28' } });
-    config.database.uri = mongod.getUri();
-    console.log('Started MongoDB Memory Server at ' + config.database.uri);
-  } catch(e) {
-    console.log('Failed to start memory server, using fallback', e);
+  require('dotenv').config();
+  if (process.env.MONGODB_URI) {
+    config.database.uri = process.env.MONGODB_URI;
+    console.log('Using MongoDB from environment variable: ' + config.database.uri.split('@')[1]);
+  } else {
+    try {
+      const { MongoMemoryServer } = require('mongodb-memory-server');
+      const mongod = await MongoMemoryServer.create({ binary: { version: '5.0.28' } });
+      config.database.uri = mongod.getUri();
+      console.log('Started MongoDB Memory Server at ' + config.database.uri);
+    } catch(e) {
+      console.log('Failed to start memory server, using fallback', e);
+    }
   }
 
   dbConnection = new Connection(config.database);

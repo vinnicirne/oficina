@@ -10,6 +10,7 @@ const user = {
   email: { type: 'string', format: 'email', 'm-unique': true },
   status: { type: 'string', enum: ['GUEST', 'ACTIVE'] },
   roles: { type: 'string', 'm-default': 'cliente' },
+  department: { type: 'string', enum: ['Financeiro', 'Escritório', 'Gerente de Oficina', 'Mecânico', 'Administrador Geral', 'Cliente'], 'm-default': 'Cliente' },
   businessUnit: { type: 'string', enum: ['ELEVADORES', 'OFICINA', 'AMBOS'], 'm-default': 'ELEVADORES' },
   
   // Dados Pessoais / Empresa (SAT)
@@ -42,8 +43,8 @@ const postSchema = {
 
 const updateSchema = {
   type: 'object',
-  properties: _.pick(user, ['firstName', 'lastName', 'email', 'phone']),
-  anyOf: ['firstName', 'lastName', 'email', 'phone'].map(key => ({ required: [`${key}`] })),
+  properties: _.pick(user, ['firstName', 'lastName', 'email', 'phone', 'department', 'roles']),
+  anyOf: ['firstName', 'lastName', 'email', 'phone', 'department', 'roles'].map(key => ({ required: [`${key}`] })),
   additionalProperties: false,
 };
 

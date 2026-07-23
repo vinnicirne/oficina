@@ -19,8 +19,9 @@ class UserController {
    *  model : model reference
    * }
    */
-  constructor(model) {
+  constructor(model, logModel) {
     this.model = model;
+    this.logModel = logModel;
     this.jsonSchema = model.getJsonSchema();
     this.registerUser = this.registerUser.bind(this);
     this.activateUser = this.activateUser.bind(this);
@@ -54,12 +55,17 @@ class UserController {
       .then(input => _.merge(input, preActivated ? {} : { verification: {
         code: uuid(), expiry: dateConverter.addTimeIso(2, 'd'), attempts: 0, resendAttempt: 0 } }))
       .then(input => this.model.createUser(input, preActivated))
-      .then(result => Promise.all([res.status(201).send(serializer.serialize(result, { type: 'users' })),
+      .then(result => {
+        if (this.logModel && req.user) {
+           this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'CREATE', resource: 'USER', resourceId: result._id, details: `Criou usuário ${result.firstName}` }).catch(console.error);
+        }
+        return Promise.all([res.status(201).send(serializer.serialize(result, { type: 'users' })),
         mailer({
           to: result.email,
           userDetails: _.merge({ password: body.password, code: (result.verification || {}).code }, _.pick(result, 'firstName')),
           template: preActivated ? 'activeNewUser' : 'newUser',
-        })]))
+        })])
+      })
       .catch(error => next(error));
   }
 
@@ -152,7 +158,12 @@ class UserController {
     validator.buildParams({ input: body, schema: this.jsonSchema.updateSchema })
       .then(input => validator.validate({ input, schema: this.jsonSchema.updateSchema }))
       .then(input => this.model.updateUser(req.userId._id, input))
-      .then(result => res.status(200).send(serializer.serialize(result, { type: 'users' })))
+      .then(result => {
+        if (this.logModel && req.user) {
+           this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'UPDATE', resource: 'USER', resourceId: req.userId._id, details: `Atualizou usuário` }).catch(console.error);
+        }
+        return res.status(200).send(serializer.serialize(result, { type: 'users' }));
+      })
       .catch(error => next(error));
   }
 
@@ -258,7 +269,12 @@ class UserController {
    */
   removeUser(req, res, next) {
     this.model.deleteUser(req.userId._id)
-      .then(() => next())
+      .then(() => {
+        if (this.logModel && req.user) {
+           this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'DELETE', resource: 'USER', resourceId: req.userId._id, details: `Removeu usuário` }).catch(console.error);
+        }
+        return next();
+      })
       .catch(error => next(error));
   }
 

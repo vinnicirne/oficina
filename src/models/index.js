@@ -19,6 +19,8 @@ const Invoice = require('models/invoice');
 const invoiceSchema = require('schema/invoice');
 const Transaction = require('models/transaction');
 const transactionSchema = require('schema/transaction');
+const Log = require('models/log');
+const logSchema = require('schema/log');
 
 module.exports = db => ({
   user: new User({
@@ -76,5 +78,11 @@ module.exports = db => ({
     schema: mongooseSchema(transactionSchema.postSchema),
     tableName: transactionSchema.tableName,
     jsonSchema: transactionSchema,
+  }),
+  log: new Log({
+    db,
+    schema: mongooseSchema(logSchema.postSchema),
+    tableName: logSchema.tableName,
+    jsonSchema: logSchema,
   }),
 });

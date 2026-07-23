@@ -1496,6 +1496,184 @@ const Estoque = ({ inventories, fetchInventories, businessUnit }) => {
   );
 };
 
+function Configuracoes({ businessUnit }) {
+  const [activeTab, setActiveTab] = useState('usuarios');
+  const [users, setUsers] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [newUser, setNewUser] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', department: 'Mecânico', roles: 'user', businessUnit: 'AMBOS' });
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/users`);
+      setUsers(res.data?.data?.map(u => ({ id: u.id, ...u.attributes })) || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
+  const fetchLogs = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get(`/logs`);
+      setLogs(res.data || []);
+    } catch (e) {
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (activeTab === 'usuarios') fetchUsers();
+    if (activeTab === 'logs') fetchLogs();
+  }, [activeTab, businessUnit]);
+
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/users', newUser);
+      setShowUserModal(false);
+      fetchUsers();
+    } catch (e) {
+      alert('Erro ao criar usuário');
+    }
+  };
+
+  return (
+    <div style={{ padding: '2rem', display: 'flex', gap: '2rem' }}>
+      <div style={{ width: '250px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <button className="btn" style={{ textAlign: 'left', padding: '1rem', background: activeTab === 'usuarios' ? 'var(--accent-main)' : '#fff', color: activeTab === 'usuarios' ? '#fff' : '#333' }} onClick={() => setActiveTab('usuarios')}>
+          👥 Gestão de Usuários
+        </button>
+        <button className="btn" style={{ textAlign: 'left', padding: '1rem', background: activeTab === 'logs' ? 'var(--accent-main)' : '#fff', color: activeTab === 'logs' ? '#fff' : '#333' }} onClick={() => setActiveTab('logs')}>
+          🛡️ Logs de Auditoria
+        </button>
+      </div>
+
+      <div style={{ flex: 1, background: '#fff', borderRadius: '12px', padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+        {activeTab === 'usuarios' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <h2>Usuários e Departamentos</h2>
+              <button className="btn btn-primary" onClick={() => setShowUserModal(true)}>+ Novo Usuário</button>
+            </div>
+            
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Departamento</th>
+                    <th>Acesso</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map(u => (
+                    <tr key={u.id}>
+                      <td>{u.firstName} {u.lastName}</td>
+                      <td>{u.email}</td>
+                      <td><span className="status-badge" style={{background: '#e0e7ff', color: '#4338ca'}}>{u.department || 'N/A'}</span></td>
+                      <td>{u.roles}</td>
+                      <td>
+                        <button className="btn" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={async () => {
+                           if(window.confirm('Excluir usuário?')) {
+                              await api.delete(`/users/${u.id}`);
+                              fetchUsers();
+                           }
+                        }}>🗑️</button>
+                      </td>
+                    </tr>
+                  ))}
+                  {users.length === 0 && !loading && <tr><td colSpan={5} style={{textAlign:'center'}}>Nenhum usuário encontrado</td></tr>}
+                  {loading && <tr><td colSpan={5} style={{textAlign:'center'}}>Carregando...</td></tr>}
+                </tbody>
+              </table>
+            </div>
+
+            {showUserModal && (
+              <div className="modal-overlay" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000}}>
+                <div className="modal-content" style={{background: '#fff', padding: '2rem', borderRadius: '12px', width: '500px'}}>
+                  <h2>Criar Novo Usuário</h2>
+                  <form onSubmit={handleCreateUser} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                    <div style={{display: 'flex', gap: '1rem'}}>
+                       <input className="input-field" placeholder="Nome" required onChange={e => setNewUser({...newUser, firstName: e.target.value})} />
+                       <input className="input-field" placeholder="Sobrenome" required onChange={e => setNewUser({...newUser, lastName: e.target.value})} />
+                    </div>
+                    <input className="input-field" type="email" placeholder="Email" required onChange={e => setNewUser({...newUser, email: e.target.value})} />
+                    <input className="input-field" placeholder="Telefone" onChange={e => setNewUser({...newUser, phone: e.target.value})} />
+                    <input className="input-field" type="password" placeholder="Senha (min 5)" required minLength={5} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+                    
+                    <label>Departamento</label>
+                    <select className="input-field" value={newUser.department} onChange={e => setNewUser({...newUser, department: e.target.value})}>
+                      <option value="Cliente">Cliente</option>
+                      <option value="Mecânico">Mecânico</option>
+                      <option value="Financeiro">Financeiro</option>
+                      <option value="Escritório">Escritório</option>
+                      <option value="Gerente de Oficina">Gerente de Oficina</option>
+                      <option value="Administrador Geral">Administrador Geral</option>
+                    </select>
+
+                    <label>Nível de Acesso (Role)</label>
+                    <select className="input-field" value={newUser.roles} onChange={e => setNewUser({...newUser, roles: e.target.value})}>
+                      <option value="user">Usuário Básico</option>
+                      <option value="admin">Admin</option>
+                    </select>
+
+                    <div style={{display: 'flex', gap: '1rem', marginTop: '1rem'}}>
+                      <button type="submit" className="btn btn-primary" style={{flex: 1}}>Salvar</button>
+                      <button type="button" className="btn" style={{flex: 1}} onClick={() => setShowUserModal(false)}>Cancelar</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'logs' && (
+          <div>
+            <h2>Logs de Auditoria do Sistema</h2>
+            <p style={{color: 'var(--text-secondary)', marginBottom: '1.5rem'}}>Rastreio de todas as ações importantes no sistema.</p>
+            <div className="table-container" style={{maxHeight: '600px', overflowY: 'auto'}}>
+              <table className="data-table">
+                <thead style={{position: 'sticky', top: 0, background: '#f8fafc'}}>
+                  <tr>
+                    <th>Data/Hora</th>
+                    <th>Usuário</th>
+                    <th>Ação</th>
+                    <th>Recurso</th>
+                    <th>Detalhes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map(log => (
+                    <tr key={log._id}>
+                      <td>{new Date(log.createdAt).toLocaleString()}</td>
+                      <td style={{fontWeight: 500}}>{log.userName}</td>
+                      <td>
+                         <span className="status-badge" style={{background: log.action === 'DELETE' ? '#fee2e2' : log.action === 'CREATE' ? '#dcfce7' : '#e0e7ff', color: log.action === 'DELETE' ? '#991b1b' : log.action === 'CREATE' ? '#166534' : '#3730a3'}}>{log.action}</span>
+                      </td>
+                      <td>{log.resource}</td>
+                      <td style={{maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={log.details}>{log.details}</td>
+                    </tr>
+                  ))}
+                  {logs.length === 0 && !loading && <tr><td colSpan={5} style={{textAlign:'center'}}>Nenhum log registrado ainda</td></tr>}
+                  {loading && <tr><td colSpan={5} style={{textAlign:'center'}}>Carregando logs...</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [globalOpenOS, setGlobalOpenOS] = useState(null);
@@ -1550,6 +1728,7 @@ function App() {
       case 'ordens': return <Ordens clients={clientsList} repairs={repairsList} fetchRepairs={fetchData} businessUnit={businessUnit} inventories={inventoriesList} onNavigate={setActiveTab} initialOpenOS={globalOpenOS} onClearInitialOS={() => setGlobalOpenOS(null)} />;
       case 'orcamentos': return <OrcamentoToOS clients={clientsList} repairs={repairsList} fetchRepairs={fetchData} inventories={inventoriesList} onNavigate={setActiveTab} />;
       case 'estoque': return <Estoque inventories={inventoriesList} fetchInventories={fetchData} businessUnit={businessUnit} />;
+      case 'configuracoes': return <Configuracoes businessUnit={businessUnit} />;
       default: return <div style={{padding: '2rem'}}>Em construção...</div>;
     }
   }

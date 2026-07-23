@@ -9,8 +9,9 @@ const config = require('common/config/config');
 const serializer = new Serializer();
 
 class ClientController {
-  constructor(model) {
+  constructor(model, logModel) {
     this.model = model;
+    this.logModel = logModel;
     this.jsonSchema = model.getJsonSchema();
     this.createClient = this.createClient.bind(this);
     this.listClients = this.listClients.bind(this);
@@ -25,7 +26,12 @@ class ClientController {
     validator.buildParams({ input: body, schema: this.jsonSchema.postSchema })
       .then(input => validator.validate({ input, schema: this.jsonSchema.postSchema }))
       .then(input => this.model.createClient(input))
-      .then(result => res.status(201).send(serializer.serialize(result, { type: 'clients' })))
+      .then(result => {
+        if(this.logModel && req.user) {
+          this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'CREATE', resource: 'CLIENT', resourceId: result._id, details: `Criou cliente ${result.firstName}` }).catch(console.error);
+        }
+        return res.status(201).send(serializer.serialize(result, { type: 'clients' }));
+      })
       .catch(error => next(error));
   }
 
@@ -60,13 +66,23 @@ class ClientController {
     validator.buildParams({ input: body, schema: this.jsonSchema.updateSchema })
       .then(input => validator.validate({ input, schema: this.jsonSchema.updateSchema }))
       .then(input => this.model.updateClient(req.clientId._id, input))
-      .then(result => res.status(200).send(serializer.serialize(result, { type: 'clients' })))
+      .then(result => {
+        if(this.logModel && req.user) {
+          this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'UPDATE', resource: 'CLIENT', resourceId: result._id, details: `Atualizou cliente ${result.firstName}` }).catch(console.error);
+        }
+        return res.status(200).send(serializer.serialize(result, { type: 'clients' }));
+      })
       .catch(error => next(error));
   }
 
   removeClient(req, res, next) {
     this.model.deleteClient(req.clientId._id)
-      .then(() => res.status(204).send())
+      .then(() => {
+        if(this.logModel && req.user) {
+          this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'DELETE', resource: 'CLIENT', resourceId: req.clientId._id, details: `Removeu cliente` }).catch(console.error);
+        }
+        return res.status(204).send();
+      })
       .catch(error => next(error));
   }
 

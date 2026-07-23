@@ -8,6 +8,7 @@ class TransactionController {
     this.models = models;
     this.transactionModel = models.transaction;
     this.userModel = models.user;
+    this.logModel = models.log;
     
     this.getTransactions = this.getTransactions.bind(this);
     this.addTransaction = this.addTransaction.bind(this);
@@ -58,7 +59,12 @@ class TransactionController {
 
         return this.transactionModel.addTransaction(data);
       })
-      .then(tx => res.status(201).json(tx))
+      .then(tx => {
+         if (this.logModel && req.user) {
+            this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'CREATE', resource: 'TRANSACTION', resourceId: tx._id, details: `Criou Fatura de R$ ${tx.valor}` }).catch(console.error);
+         }
+         return res.status(201).json(tx);
+      })
       .catch(next);
   }
 
@@ -97,7 +103,12 @@ class TransactionController {
           return this.userModel.updateUser(user._id, { creditScore: score, totalSpent });
         });
       })
-      .then(() => res.json({ success: true }))
+      .then(() => {
+         if (this.logModel && req.user) {
+            this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'PAY', resource: 'TRANSACTION', resourceId: req.params.transactionId, details: `Registrou Pagamento` }).catch(console.error);
+         }
+         return res.json({ success: true });
+      })
       .catch(next);
   }
 
@@ -136,14 +147,24 @@ class TransactionController {
           return this.userModel.updateUser(user._id, { creditScore: score, totalSpent });
         });
       })
-      .then(() => res.json({ success: true }))
+      .then(() => {
+         if (this.logModel && req.user) {
+            this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'UNPAY', resource: 'TRANSACTION', resourceId: req.params.transactionId, details: `Desfez o Pagamento` }).catch(console.error);
+         }
+         return res.json({ success: true });
+      })
       .catch(next);
   }
 
   deleteTransaction(req, res, next) {
     const transactionId = req.params.transactionId;
     this.transactionModel.deleteTransaction(transactionId)
-      .then(() => res.json({ success: true }))
+      .then(() => {
+         if (this.logModel && req.user) {
+            this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'DELETE', resource: 'TRANSACTION', resourceId: req.params.transactionId, details: `Removeu Fatura` }).catch(console.error);
+         }
+         return res.json({ success: true });
+      })
       .catch(next);
   }
 }

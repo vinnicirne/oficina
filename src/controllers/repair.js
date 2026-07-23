@@ -8,8 +8,9 @@ const config = require('common/config/config');
 const serializer = new Serializer();
 
 class RepairController {
-  constructor(model) {
+  constructor(model, logModel) {
     this.model = model;
+    this.logModel = logModel;
     this.jsonSchema = model.getJsonSchema();
     this.addRepair = this.addRepair.bind(this);
     this.listRepairs = this.listRepairs.bind(this);
@@ -31,7 +32,12 @@ class RepairController {
     validator.buildParams({ input: body, schema: this.jsonSchema.postSchema })
       .then(input => validator.validate({ input, schema: this.jsonSchema.postSchema }))
       .then(input => this.model.addRepair(input))
-      .then(result => res.status(201).send(result))
+      .then(result => {
+        if(this.logModel && req.user) {
+          this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'CREATE', resource: 'REPAIR', resourceId: result._id, details: `Criou O.S. ${result.equipmentId}` }).catch(console.error);
+        }
+        return res.status(201).send(result);
+      })
       .catch(error => next(error));
   }
 
@@ -68,20 +74,35 @@ class RepairController {
   updateRepairByUser(req, res, next) {
     const data = req.body;
     this.model.updateRepair(req.params.repairId, data)
-      .then(result => res.status(200).send(result))
+      .then(result => {
+        if(this.logModel && req.user) {
+          this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'UPDATE', resource: 'REPAIR', resourceId: req.params.repairId, details: `Usuário atualizou O.S.` }).catch(console.error);
+        }
+        return res.status(200).send(result);
+      })
       .catch(error => next(error));
   }
 
   updateRepairByManager(req, res, next) {
     const data = req.body;
     this.model.updateRepair(req.params.repairId, data)
-      .then(result => res.status(200).send(result))
+      .then(result => {
+        if(this.logModel && req.user) {
+          this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'UPDATE', resource: 'REPAIR', resourceId: req.params.repairId, details: `Gerente atualizou O.S. para status: ${data.status || '?'}` }).catch(console.error);
+        }
+        return res.status(200).send(result);
+      })
       .catch(error => next(error));
   }
 
   removeRepair(req, res, next) {
     this.model.deleteRepair(req.params.repairId)
-      .then(() => res.status(204).send())
+      .then(() => {
+        if(this.logModel && req.user) {
+          this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'DELETE', resource: 'REPAIR', resourceId: req.params.repairId, details: `Removeu O.S.` }).catch(console.error);
+        }
+        return res.status(204).send();
+      })
       .catch(error => next(error));
   }
 
@@ -122,6 +143,9 @@ class RepairController {
 
       const updated = await this.model.updateRepair(req.params.repairId, { status: 'EM_EXECUCAO' });
       
+      if (this.logModel && req.user) {
+         this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'UPDATE', resource: 'REPAIR', resourceId: req.params.repairId, details: `Aprovou o orçamento da O.S.` }).catch(console.error);
+      }
       res.status(200).send({ message: 'Orçamento Aprovado e Crédito Deduzido', repair: updated });
     } catch (error) {
       next(error);
@@ -186,6 +210,9 @@ class RepairController {
 
       const updated = await this.model.updateRepair(req.params.repairId, { status: 'CONCLUIDO', paymentMethod });
       
+      if (this.logModel && req.user) {
+         this.logModel.addLog({ userId: req.user._id, userName: `${req.user.firstName} ${req.user.lastName}`, action: 'UPDATE', resource: 'REPAIR', resourceId: req.params.repairId, details: `Finalizou O.S. (Checkout) via ${paymentMethod}` }).catch(console.error);
+      }
       res.status(200).send({ message: 'OS Finalizada/Atualizada com Sucesso', repair: updated });
     } catch (error) {
       next(error);

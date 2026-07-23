@@ -559,11 +559,20 @@ const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose
     }
     setLoading(true);
     setMensagem('');
+    const selectedInventories = (inventories || []).filter(i => novaOSForm.servicos.includes(i.descricao));
+    const materiaisList = selectedInventories.map(i => ({
+      descricao: i.descricao,
+      quantidade: 1,
+      precoUnitario: Number(i.valorVenda) || 0,
+      total: Number(i.valorVenda) || 0
+    }));
+
     try {
       await api.post(`/clients/${novaOSForm.clientId}/repairs`, {
         equipmentId: novaOSForm.equipmentId,
         defeitoInformado: novaOSForm.placa,
         servicoSolicitado: novaOSForm.servicos.join(', '),
+        materiais: materiaisList,
         observacao: novaOSForm.observacao,
         status: novaOSForm.status,
         businessUnit

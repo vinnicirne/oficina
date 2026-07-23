@@ -152,7 +152,7 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate }) => {
                 <td><div style={{fontWeight: 600}}>{client.firstName} {client.lastName}</div></td>
                 <td><div style={{fontWeight: 500, color: 'var(--text-secondary)'}}>{r.equipmentId || '-'}</div></td>
                 <td><div style={{fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase'}}>{r.defeitoInformado || '-'}</div></td>
-                <td><div className="truncate-cell" title={r.servicoSolicitado} onClick={() => alert(r.servicoSolicitado)}>{r.servicoSolicitado}</div></td>
+                <td><div style={{maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={r.servicoSolicitado} onClick={() => alert(r.servicoSolicitado)}>{r.servicoSolicitado}</div></td>
                 <td><span className={`badge ${r.status === 'EM_EXECUCAO' ? 'in-progress' : 'pending'}`}>{r.status}</span></td>
               </tr>
              )
@@ -1229,7 +1229,7 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
                 <td>{client.firstName} {client.lastName}</td>
                 <td style={{fontWeight: 500, color: 'var(--text-secondary)'}}>{r.equipmentId || '-'}</td>
                 <td style={{fontWeight: 700, textTransform: 'uppercase'}}>{r.defeitoInformado || '-'}</td>
-                <td><div className="truncate-cell" title={r.servicoSolicitado} onClick={(e) => { e.stopPropagation(); setViewingService(r); }}>{r.servicoSolicitado}</div></td>
+                <td><div style={{maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={r.servicoSolicitado} onClick={(e) => { e.stopPropagation(); setViewingService(r); }}>{r.servicoSolicitado}</div></td>
                 <td style={{fontWeight: 600}}>R$ {total.toFixed(2)}</td>
                 <td>
                   <span style={{padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', background: r.status === 'AGUARDANDO_APROVACAO' ? '#fef3c7' : (r.status === 'EM_EXECUCAO' ? '#dbeafe' : '#dcfce7'), color: r.status === 'AGUARDANDO_APROVACAO' ? '#92400e' : (r.status === 'EM_EXECUCAO' ? '#1e40af' : '#16a34a')}}>
@@ -1237,16 +1237,16 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
                   </span>
                 </td>
                 <td style={{display: 'flex', gap: '0.4rem', whiteSpace: 'nowrap'}}>
-                  <button className="btn-primary" style={{background: '#3b82f6', padding: '0.3rem 0.6rem', fontSize: '0.75rem'}} onClick={() => setPrintOS(r)}>🖨️ Imprimir</button>
-                  <button className="btn-primary" style={{background: '#f59e0b', padding: '0.3rem 0.6rem', fontSize: '0.75rem'}} onClick={() => setEditingOS(r)}>✏️ Editar</button>
+                  <button className="btn-primary" style={{background: '#3b82f6', padding: '0.4rem 0.6rem', fontSize: '1rem'}} onClick={() => setPrintOS(r)} title="Imprimir">🖨️</button>
+                  <button className="btn-primary" style={{background: '#f59e0b', padding: '0.4rem 0.6rem', fontSize: '1rem'}} onClick={() => setEditingOS(r)} title="Editar">✏️</button>
                   {r.status === 'AGUARDANDO_APROVACAO' ? (
-                    <button className="btn-primary" style={{padding: '0.3rem 0.6rem', fontSize: '0.75rem', background: '#6366f1'}} onClick={() => handleTransform(r)}>🔄 Transformar</button>
+                    <button className="btn-primary" style={{padding: '0.4rem 0.6rem', fontSize: '1rem', background: '#6366f1'}} onClick={() => handleTransform(r)} title="Transformar em OS">🔄</button>
                   ) : (
-                    <button className="btn-primary" style={{padding: '0.3rem 0.6rem', fontSize: '0.75rem', background: '#10b981'}} onClick={() => { setSelectedOS(r); setPaymentMethod(r.paymentMethod || ''); }}>
-                      {r.status === 'EM_EXECUCAO' ? '✅ Finalizar' : '💳 Pagamento'}
+                    <button className="btn-primary" style={{padding: '0.4rem 0.6rem', fontSize: '1rem', background: '#10b981'}} onClick={() => { setSelectedOS(r); setPaymentMethod(r.paymentMethod || ''); }} title={r.status === 'EM_EXECUCAO' ? 'Finalizar' : 'Pagamento'}>
+                      {r.status === 'EM_EXECUCAO' ? '✅' : '💳'}
                     </button>
                   )}
-                  <button className="btn-primary" style={{background: '#ef4444', padding: '0.3rem 0.6rem', fontSize: '0.75rem'}} onClick={() => handleDeleteOS(r)} title="Excluir">🗑️</button>
+                  <button className="btn-primary" style={{background: '#ef4444', padding: '0.4rem 0.6rem', fontSize: '1rem'}} onClick={() => handleDeleteOS(r)} title="Excluir">🗑️</button>
                 </td>
               </tr>
              )

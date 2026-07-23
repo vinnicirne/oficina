@@ -324,8 +324,13 @@ const Clientes = ({ clients, fetchClients }) => {
               <input type="text" value={formData.inscricaoEstadual} onChange={e => setFormData({...formData, inscricaoEstadual: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
             </div>
             <div style={{flex: 1}}>
-              <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Data de Nascimento (AAAA-MM-DD)</label>
-              <input type="text" placeholder="Ex: 1990-05-20" value={formData.dataNascimento} onChange={e => setFormData({...formData, dataNascimento: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
+              <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Data de Nascimento (DD/MM/AAAA)</label>
+              <input type="text" placeholder="Ex: 20/05/1990" maxLength={10} value={formData.dataNascimento} onChange={e => {
+                let val = e.target.value.replace(/\D/g, '');
+                if (val.length > 2) val = val.substring(0, 2) + '/' + val.substring(2);
+                if (val.length > 5) val = val.substring(0, 5) + '/' + val.substring(5, 9);
+                setFormData({...formData, dataNascimento: val});
+              }} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
             </div>
           </div>
 

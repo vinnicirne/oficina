@@ -12,6 +12,8 @@ class TransactionController {
     this.getTransactions = this.getTransactions.bind(this);
     this.addTransaction = this.addTransaction.bind(this);
     this.payTransaction = this.payTransaction.bind(this);
+    this.unpayTransaction = this.unpayTransaction.bind(this);
+    this.deleteTransaction = this.deleteTransaction.bind(this);
   }
 
   getTransactions(req, res, next) {
@@ -95,6 +97,52 @@ class TransactionController {
           return this.userModel.updateUser(user._id, { creditScore: score, totalSpent });
         });
       })
+      .then(() => res.json({ success: true }))
+      .catch(next);
+  }
+
+  unpayTransaction(req, res, next) {
+    const transactionId = req.params.transactionId;
+    let tx;
+    this.transactionModel.getTransaction(transactionId)
+      .then(t => {
+        if (!t) throw new exceptions.NotFound();
+        if (t.status !== 'PAID') throw new exceptions.BadRequest('Fatura não está paga');
+        
+        tx = t;
+        const pagoAtrasado = tx.dataPagamento && new Date(tx.dataPagamento) > new Date(tx.dataVencimento);
+        
+        return this.transactionModel.updateTransaction(transactionId, {
+          status: 'PENDING',
+          dataPagamento: null
+        }).then(() => pagoAtrasado);
+      })
+      .then(pagoAtrasado => {
+        return this.userModel.getUser(tx.clientId).then(user => {
+          if (!user) return;
+          
+          let score = user.creditScore || 500;
+          if (pagoAtrasado) {
+            score += 100;
+          } else {
+            score -= 50;
+          }
+          if (score > 1000) score = 1000;
+          if (score < 0) score = 0;
+          
+          let totalSpent = (user.totalSpent || 0) - tx.valor;
+          if (totalSpent < 0) totalSpent = 0;
+          
+          return this.userModel.updateUser(user._id, { creditScore: score, totalSpent });
+        });
+      })
+      .then(() => res.json({ success: true }))
+      .catch(next);
+  }
+
+  deleteTransaction(req, res, next) {
+    const transactionId = req.params.transactionId;
+    this.transactionModel.deleteTransaction(transactionId)
       .then(() => res.json({ success: true }))
       .catch(next);
   }

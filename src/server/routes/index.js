@@ -43,6 +43,8 @@ const routes = (express, app, { user, client, access, role, repair, inventory, t
   route.get('/transactions', access.verifyAuth(), user.populateTokenUser(), transaction.getTransactions);
   route.post('/transactions', access.verifyAuth(), user.populateTokenUser(), transaction.addTransaction);
   route.put('/transactions/:transactionId/pay', access.verifyAuth(), user.populateTokenUser(), transaction.payTransaction);
+  route.put('/transactions/:transactionId/unpay', access.verifyAuth(), user.populateTokenUser(), transaction.unpayTransaction);
+  route.delete('/transactions/:transactionId', access.verifyAuth(), user.populateTokenUser(), transaction.deleteTransaction);
 
   app.use(`/api/${config.server.version}`, route);
 };

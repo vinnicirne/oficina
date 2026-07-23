@@ -193,9 +193,33 @@ const ClientCreditProfile = ({ client, onClose, onUpdateClient }) => {
     }
   };
 
+  const handleUnpay = async (txId) => {
+    if(!window.confirm('Tem certeza que deseja desfazer este pagamento? O score do cliente será reajustado.')) return;
+    try {
+      await api.put(`/transactions/${txId}/unpay`);
+      fetchTransactions();
+      onUpdateClient();
+    } catch (e) {
+      alert('Erro ao desfazer pagamento');
+    }
+  };
+
+  const handleDeleteTx = async (txId) => {
+    if(!window.confirm('Tem certeza que deseja excluir esta fatura permanentemente?')) return;
+    try {
+      await api.delete(`/transactions/${txId}`);
+      fetchTransactions();
+      onUpdateClient();
+    } catch (e) {
+      alert('Erro ao excluir fatura');
+    }
+  };
+
   const score = client.creditScore || 500;
   const statusColor = score >= 700 ? 'var(--accent-success)' : score < 400 ? 'var(--accent-main)' : '#f59e0b';
   const statusText = score >= 700 ? 'BOM PAGADOR' : score < 400 ? 'MAL PAGADOR' : 'INTERMEDIÁRIO';
+  
+  const ltv = transactions.filter(t => t.status === 'PAID').reduce((acc, t) => acc + (t.valor || 0), 0);
 
   return (
     <div className="glass-card" style={{padding: '2rem'}}>
@@ -215,7 +239,7 @@ const ClientCreditProfile = ({ client, onClose, onUpdateClient }) => {
         <div style={{flex: '2 1 300px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1.2rem', padding: '1rem'}}>
            <div style={{fontSize: '1.1rem'}}><strong>Status do Cliente:</strong> <span style={{color: client.creditStatus === 'BLOCKED' ? 'var(--accent-main)' : 'var(--accent-success)', fontWeight: 700}}>{client.creditStatus === 'BLOCKED' ? 'BLOQUEADO' : 'ATIVO'}</span></div>
            <div style={{fontSize: '1.1rem'}}><strong>Cliente Recorrente:</strong> {transactions.length > 2 ? 'Sim 🌟' : 'Não'}</div>
-           <div style={{fontSize: '1.1rem'}}><strong>LTV (Total Gasto):</strong> R$ {(client.totalSpent || 0).toFixed(2)}</div>
+           <div style={{fontSize: '1.1rem'}}><strong>LTV (Total Gasto):</strong> R$ {ltv.toFixed(2)}</div>
            <div style={{fontSize: '1.1rem'}}><strong>Vencimento Padrão:</strong> Todo dia {client.diaVencimento || 10}</div>
            {score >= 700 && <div style={{color: 'var(--accent-success)', fontWeight: 600, marginTop: '0.5rem'}}>💡 Sugestão: Este é um excelente cliente, considere aumentar o limite de crédito dele a cada 3 meses!</div>}
            {score < 400 && <div style={{color: 'var(--accent-main)', fontWeight: 600, marginTop: '0.5rem'}}>⚠️ Cuidado: Este cliente possui histórico frequente de atrasos. Não ofereça limite alto.</div>}
@@ -246,10 +270,14 @@ const ClientCreditProfile = ({ client, onClose, onUpdateClient }) => {
                   {tx.status === 'PAID' ? 'PAGO' : isOverdue ? 'EM ATRASO' : 'A PAGAR'}
                 </span>
               </td>
-              <td>
+              <td style={{display: 'flex', gap: '0.4rem'}}>
                 {tx.status === 'PENDING' && (
                   <button className="btn-primary" style={{padding: '0.4rem 0.8rem', fontSize: '0.8rem'}} onClick={() => handlePay(tx._id || tx.id)}>💳 Registrar Pagamento</button>
                 )}
+                {tx.status === 'PAID' && (
+                  <button className="btn-primary" style={{background: '#f59e0b', padding: '0.4rem 0.8rem', fontSize: '0.8rem'}} onClick={() => handleUnpay(tx._id || tx.id)} title="Desfazer Pagamento">↩️ Desfazer</button>
+                )}
+                <button className="btn-primary" style={{background: '#ef4444', padding: '0.4rem 0.6rem', fontSize: '0.9rem'}} onClick={() => handleDeleteTx(tx._id || tx.id)} title="Excluir Fatura">🗑️</button>
               </td>
             </tr>
           )})}

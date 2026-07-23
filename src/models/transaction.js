@@ -26,6 +26,10 @@ class Transaction {
     return this.model.findById(id);
   }
 
+  deleteTransaction(id) {
+    return this.model.findByIdAndDelete(id);
+  }
+
   queryTransaction(input) {
     return new Promise((resolve, reject) => {
       this.model.find(input).find((err, data) => {

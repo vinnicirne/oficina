@@ -1920,12 +1920,12 @@ function App() {
       <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`} style={{display: 'flex', flexDirection: 'column'}}>
         <div className="brand" style={{flexDirection: 'column', alignItems: 'center', padding: '1.5rem 1rem', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem'}}>
-          <img src="/logo-oficina.png" alt="Logo" style={{width: '100%', maxWidth: '240px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} />
-        </div>
-        
-        <div className="unit-selector" style={{display: 'flex', gap: '0.5rem', width: '100%', background: '#f1f5f9', padding: '0.4rem', borderRadius: '8px', marginBottom: '1.5rem'}}>
-          <button style={{flex: 1, padding: '0.6rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'OFICINA' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'OFICINA' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('OFICINA')}>🚗 Oficina</button>
-          <button style={{flex: 1, padding: '0.6rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'ELEVADORES' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'ELEVADORES' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('ELEVADORES')}>🏢 Elevadores</button>
+          <img src="/logo-oficina.png" alt="Logo" style={{width: '100%', maxWidth: '240px', objectFit: 'contain', marginBottom: '1.5rem'}} onError={(e) => { e.target.style.display = 'none'; }} />
+          
+          <div className="unit-selector" style={{display: 'flex', gap: '0.5rem', width: '100%', background: '#f1f5f9', padding: '0.4rem', borderRadius: '8px'}}>
+            <button style={{flex: 1, padding: '0.6rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'OFICINA' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'OFICINA' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('OFICINA')}>🚗 Oficina</button>
+            <button style={{flex: 1, padding: '0.6rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'ELEVADORES' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'ELEVADORES' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('ELEVADORES')}>🏢 Elevadores</button>
+          </div>
         </div>
 
         <nav className="nav-menu" style={{flex: 1}}>

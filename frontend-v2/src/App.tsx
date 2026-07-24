@@ -1458,7 +1458,7 @@ const Login = ({ onLogin }) => {
   return (
     <div style={{display: 'flex', height: '100vh', background: '#f8fafc', overflow: 'hidden'}}>
       {/* Lado Esquerdo - Info do Sistema */}
-      <div style={{
+      <div className="hide-on-mobile" style={{
         flex: 1, 
         background: 'linear-gradient(to right, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.7) 100%), url("https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?q=80&w=1920&auto=format&fit=crop")',
         backgroundSize: 'cover',

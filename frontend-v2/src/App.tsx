@@ -1935,7 +1935,8 @@ function App() {
         <header className="header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
           <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
             <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>☰</button>
-            <h2>{navItems.find(i => i.id === activeTab)?.label}</h2>
+            <h2 className="hide-on-mobile">{navItems.find(i => i.id === activeTab)?.label}</h2>
+            <img src="/logo-oficina.png" alt="Logo" className="show-on-mobile" style={{height: '35px', objectFit: 'contain', marginLeft: '0.5rem'}} />
             <div className="unit-selector" style={{display: 'flex', gap: '0.5rem', width: '250px', background: '#f1f5f9', padding: '0.3rem', borderRadius: '8px'}}>
               <button style={{flex: 1, padding: '0.5rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'OFICINA' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'OFICINA' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('OFICINA')}>🚗 Oficina</button>
               <button style={{flex: 1, padding: '0.5rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'ELEVADORES' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'ELEVADORES' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('ELEVADORES')}>🏢 Elevadores</button>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from './services/api';
+import { supabase } from './services/supabase';
 import './index.css';
 
 const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS }) => {
@@ -174,8 +174,8 @@ const ClientCreditProfile = ({ client, onClose, onUpdateClient }) => {
 
   const fetchTransactions = async () => {
     try {
-      const res = await api.get(`/transactions?clientId=${client._id || client.id}`);
-      setTransactions(res.data);
+      const res = await supabase.from('transactions').select('*').eq('clientId', client._id || client.id);
+      setTransactions(res.data || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -185,7 +185,7 @@ const ClientCreditProfile = ({ client, onClose, onUpdateClient }) => {
 
   const handlePay = async (txId) => {
     try {
-      await api.put(`/transactions/${txId}/pay`);
+      await supabase.from('transactions').update({ status: 'PAID' }).eq('id', txId);
       fetchTransactions();
       onUpdateClient(); // refresh client data to update score
     } catch (e) {
@@ -196,7 +196,7 @@ const ClientCreditProfile = ({ client, onClose, onUpdateClient }) => {
   const handleUnpay = async (txId) => {
     if(!window.confirm('Tem certeza que deseja desfazer este pagamento? O score do cliente será reajustado.')) return;
     try {
-      await api.put(`/transactions/${txId}/unpay`);
+      await supabase.from('transactions').update({ status: 'PENDING' }).eq('id', txId);
       fetchTransactions();
       onUpdateClient();
     } catch (e) {
@@ -207,7 +207,7 @@ const ClientCreditProfile = ({ client, onClose, onUpdateClient }) => {
   const handleDeleteTx = async (txId) => {
     if(!window.confirm('Tem certeza que deseja excluir esta fatura permanentemente?')) return;
     try {
-      await api.delete(`/transactions/${txId}`);
+      await supabase.from('transactions').delete().eq('id', txId);
       fetchTransactions();
       onUpdateClient();
     } catch (e) {
@@ -351,7 +351,7 @@ const Clientes = ({ clients, fetchClients }) => {
   const handleDelete = async (client) => {
     if (window.confirm(`Tem certeza que deseja excluir o cliente ${client.firstName}?`)) {
       try {
-        await api.delete(`/clients/${client.id || client._id}`);
+        await supabase.from('clients').delete().eq('id', client.id || client._id);
         fetchClients();
       } catch (err) {
         console.error(err);
@@ -394,10 +394,10 @@ const Clientes = ({ clients, fetchClients }) => {
       };
 
       if (editingClient) {
-        await api.put(`/clients/${editingClient.id || editingClient._id}`, payload);
+        await supabase.from('clients').update(payload).eq('id', editingClient.id || editingClient._id);
         setMensagem('✅ Cliente atualizado com sucesso!');
       } else {
-        await api.post('/clients', payload);
+        await supabase.from('clients').insert([payload]);
         setMensagem('✅ Cliente cadastrado com sucesso!');
       }
       
@@ -596,7 +596,8 @@ const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose
     }));
 
     try {
-      await api.post(`/clients/${novaOSForm.clientId}/repairs`, {
+      await supabase.from('repairs').insert([{
+        clientId: novaOSForm.clientId,
         equipmentId: novaOSForm.equipmentId,
         defeitoInformado: novaOSForm.placa,
         servicoSolicitado: novaOSForm.servicos.join(', '),
@@ -604,7 +605,7 @@ const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose
         observacao: novaOSForm.observacao,
         status: novaOSForm.status,
         businessUnit
-      });
+      }]);
       setMensagem('✅ Sucesso! Registro criado.');
       fetchRepairs();
       setTimeout(() => { 
@@ -752,7 +753,7 @@ const OrcamentoToOS = ({ clients, repairs, fetchRepairs, inventories, onNavigate
     setLoading(true);
     setMensagem('');
     try {
-      await api.post(`/clients/${selectedRepair.clientId}/repairs/${selectedRepair._id}/approve`);
+      await supabase.from('repairs').update({ status: 'EM_EXECUCAO' }).eq('id', selectedRepair.id || selectedRepair._id);
       setMensagem('✅ Sucesso! Status alterado para "Em Execução". A cobrança será feita na finalização.');
       fetchRepairs();
     } catch (error) {
@@ -765,7 +766,7 @@ const OrcamentoToOS = ({ clients, repairs, fetchRepairs, inventories, onNavigate
   const handleDeleteOS = async (repair) => {
     if (window.confirm(`Tem certeza que deseja excluir a OS #${repair._id.slice(-6)}?`)) {
       try {
-        await api.delete(`/clients/${repair.clientId}/repairs/${repair._id}`);
+        await supabase.from('repairs').delete().eq('id', repair.id || repair._id);
         fetchRepairs();
       } catch (err) {
         console.error(err);
@@ -1002,13 +1003,13 @@ const EditorDeOS = ({ repair, fetchRepairs, inventories, onClose }) => {
     setLoading(true);
     setMensagem('');
     try {
-      await api.put(`/clients/${editingOS.clientId}/repairs/${editingOS._id}`, {
+      await supabase.from('repairs').update({
         equipmentId: editingOS.equipmentId,
         defeitoInformado: editingOS.defeitoInformado,
         materiais: editingOS.materiais,
         status: editingOS.status,
         observacao: editingOS.observacao
-      });
+      }).eq('id', editingOS.id || editingOS._id);
       setMensagem('✅ Sucesso! OS atualizada.');
       fetchRepairs();
       setTimeout(() => { onClose(); }, 1500);
@@ -1149,7 +1150,7 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
     setLoading(true);
     setMensagem('');
     try {
-      await api.post(`/clients/${selectedOS.clientId}/repairs/${selectedOS._id}/checkout`, { paymentMethod });
+      await supabase.from('repairs').update({ status: 'CONCLUIDO' }).eq('id', selectedOS.id || selectedOS._id);
       setMensagem('✅ Sucesso! OS Finalizada com sucesso.');
       fetchRepairs();
       setTimeout(() => setSelectedOS(null), 2000);
@@ -1162,7 +1163,7 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
 
   const handleTransform = async (repair) => {
     try {
-      await api.post(`/clients/${repair.clientId}/repairs/${repair._id}/approve`);
+      await supabase.from('repairs').update({ status: 'EM_EXECUCAO' }).eq('id', repair.id || repair._id);
       fetchRepairs();
     } catch (err) {
       console.error(err);
@@ -1173,7 +1174,7 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
   const handleDeleteOS = async (repair) => {
     if (window.confirm(`Tem certeza que deseja excluir a OS #${repair._id.slice(-6)}?`)) {
       try {
-        await api.delete(`/clients/${repair.clientId}/repairs/${repair._id}`);
+        await supabase.from('repairs').delete().eq('id', repair.id || repair._id);
         fetchRepairs();
       } catch (err) {
         console.error(err);
@@ -1316,28 +1317,89 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('oss@servicos.com');
-  const [password, setPassword] = useState('@@302010@@');
+  const [password, setPassword] = useState('Oficina@123456');
+  const [nome, setNome] = useState('');
+  const [sobrenome, setSobrenome] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
+  const [sucesso, setSucesso] = useState('');
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErro('');
+    setSucesso('');
     try {
-      const response = await api.post('/auth/login', { email, password });
-      
-      // O backend utiliza o padrão JSON API (Serializer), precisamos parsear corretamente
-      const token = response.data.data[0].attributes.access_token;
-      const userObj = response.data.includes[0].data[0].attributes;
-      userObj.id = response.data.includes[0].data[0].id;
-
-      localStorage.setItem('token', token);
-      localStorage.setItem('userId', userObj.id);
-      onLogin(userObj);
+      if (isForgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin,
+        });
+        if (error) throw error;
+        setSucesso('E-mail de recuperação enviado! Verifique sua caixa de entrada.');
+        setIsForgotPassword(false);
+      } else if (isSignUp) {
+        if (!nome || !sobrenome) {
+          setErro('Preencha nome e sobrenome.');
+          setLoading(false);
+          return;
+        }
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        
+        // Se a confirmação de e-mail estiver desabilitada, data.user estará preenchido
+        if (data.user) {
+          await supabase.from('users').upsert({
+            id: data.user.id,
+            firstName: nome,
+            lastName: sobrenome,
+            email: email,
+            roles: 'admin', // Como é a primeira conta, daremos permissão de admin (ou cliente se preferir gerenciar depois)
+            department: 'Administrador Geral',
+            status: 'ACTIVE'
+          });
+        }
+        setSucesso('Conta criada com sucesso! Você já pode entrar.');
+        setIsSignUp(false);
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        
+        // Buscar perfil na tabela public.users
+        const { data: profile, error: profileErr } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+          
+        if (profileErr && profileErr.code !== 'PGRST116') {
+          throw profileErr; // ignora se não encontrar (caso de migração)
+        }
+        
+        const userObj = {
+          id: data.user.id,
+          firstName: profile?.firstName || 'Admin',
+          lastName: profile?.lastName || '',
+          roles: profile?.roles || 'admin',
+          email: email
+        };
+        
+        localStorage.setItem('token', data.session.access_token);
+        localStorage.setItem('userId', data.user.id);
+        onLogin(userObj);
+      }
     } catch (error) {
       console.error(error);
-      setErro('Credenciais inválidas. Tente novamente.');
+      if (error.message.includes('Invalid login credentials')) {
+        setErro('Credenciais inválidas. Tente novamente.');
+      } else if (error.message.includes('User already registered')) {
+        setErro('E-mail já está em uso.');
+      } else if (error.message.includes('Password should be at least')) {
+        setErro('A senha deve ter pelo menos 6 caracteres.');
+      } else {
+        setErro(error.message || 'Erro de autenticação.');
+      }
     } finally {
       setLoading(false);
     }
@@ -1374,28 +1436,67 @@ const Login = ({ onLogin }) => {
       </div>
 
       {/* Lado Direito - Card de Login */}
-      <div style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative'}}>
-        <div className="glass-card" style={{width: '420px', padding: '3rem 2.5rem', boxShadow: '0 20px 40px rgba(0,0,0,0.08)'}}>
+      <div style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflowY: 'auto', padding: '2rem'}}>
+        <div className="glass-card" style={{width: '100%', maxWidth: '420px', padding: '2.5rem', boxShadow: '0 20px 40px rgba(0,0,0,0.08)', margin: 'auto'}}>
           <div style={{textAlign: 'center', marginBottom: '2.5rem'}}>
             <img src="/logo-oficina.png" alt="Sua Logo" style={{maxHeight: '160px', width: 'auto', marginBottom: '1.5rem', objectFit: 'contain'}} onError={(e) => e.target.style.display = 'none'} />
-            <h2 style={{margin: 0, color: 'var(--text-primary)', fontSize: '1.8rem', fontWeight: 700}}>Acesse sua Conta</h2>
-            <p style={{color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '0.5rem'}}>Informe suas credenciais para continuar</p>
+            <h2 style={{margin: 0, color: 'var(--text-primary)', fontSize: '1.8rem', fontWeight: 700}}>
+              {isForgotPassword ? 'Recuperar Senha' : isSignUp ? 'Criar Nova Conta' : 'Acesse sua Conta'}
+            </h2>
+            <p style={{color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '0.5rem'}}>
+              {isForgotPassword ? 'Informe seu e-mail' : isSignUp ? 'Preencha os dados abaixo' : 'Informe suas credenciais para continuar'}
+            </p>
           </div>
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit}>
+          {isSignUp && (
+            <div style={{display: 'flex', gap: '0.5rem', marginBottom: '1rem'}}>
+              <div style={{flex: 1}}>
+                <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Nome</label>
+                <input type="text" value={nome} onChange={e => setNome(e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
+              </div>
+              <div style={{flex: 1}}>
+                <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Sobrenome</label>
+                <input type="text" value={sobrenome} onChange={e => setSobrenome(e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
+              </div>
+            </div>
+          )}
           <div style={{marginBottom: '1rem'}}>
             <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>E-mail</label>
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
           </div>
-          <div style={{marginBottom: '1.5rem'}}>
-            <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Senha</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
-          </div>
+          
+          {!isForgotPassword && (
+            <div style={{marginBottom: '1.5rem'}}>
+              <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Senha</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
+            </div>
+          )}
+
+          {!isSignUp && !isForgotPassword && (
+             <div style={{textAlign: 'right', marginBottom: '1.5rem', marginTop: '-1rem'}}>
+               <span style={{fontSize: '0.85rem', color: 'var(--accent-main)', cursor: 'pointer', fontWeight: 600}} onClick={() => { setIsForgotPassword(true); setErro(''); setSucesso(''); }}>Esqueci minha senha</span>
+             </div>
+          )}
+
           {erro && <div style={{padding: '0.8rem', marginBottom: '1rem', background: '#fef2f2', color: 'var(--accent-main)', borderRadius: '6px', fontSize: '0.85rem', textAlign: 'center'}}>{erro}</div>}
+          {sucesso && <div style={{padding: '0.8rem', marginBottom: '1rem', background: '#ecfdf5', color: '#16a34a', borderRadius: '6px', fontSize: '0.85rem', textAlign: 'center'}}>{sucesso}</div>}
+          
           <button type="submit" className="btn-primary" style={{width: '100%', padding: '1rem'}} disabled={loading}>
-            {loading ? 'Autenticando...' : 'Entrar no Sistema'}
+            {loading ? 'Aguarde...' : (isForgotPassword ? 'Recuperar Senha' : isSignUp ? 'Criar Conta' : 'Entrar no Sistema')}
           </button>
         </form>
+
+        <div style={{marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)'}}>
+          {isForgotPassword ? (
+            <>Lembrou a senha? <span style={{color: 'var(--accent-main)', cursor: 'pointer', fontWeight: 600}} onClick={() => { setIsForgotPassword(false); setErro(''); setSucesso(''); }}>Faça login</span></>
+          ) : isSignUp ? (
+            <>Já tem uma conta? <span style={{color: 'var(--accent-main)', cursor: 'pointer', fontWeight: 600}} onClick={() => { setIsSignUp(false); setErro(''); setSucesso(''); }}>Faça login</span></>
+          ) : (
+            <>Novo na plataforma? <span style={{color: 'var(--accent-main)', cursor: 'pointer', fontWeight: 600}} onClick={() => { setIsSignUp(true); setErro(''); setSucesso(''); }}>Criar uma conta</span></>
+          )}
+        </div>
+
       </div>
       </div>
     </div>
@@ -1411,12 +1512,13 @@ const Estoque = ({ inventories, fetchInventories, businessUnit }) => {
     if (!novoItem.descricao || !novoItem.valorVenda) return;
     setLoading(true);
     try {
-      await api.post('/inventories', {
-        ...novoItem,
+      await supabase.from('inventories').insert([{
+        descricao: novoItem.descricao,
+        categoria: novoItem.categoria,
         valorVenda: Number(novoItem.valorVenda),
         quantidade: Number(novoItem.quantidade),
         businessUnit
-      });
+      }]);
       fetchInventories();
       setNovoItem({ descricao: '', categoria: 'PEÇA', valorVenda: '', quantidade: 1 });
     } catch (err) {
@@ -1429,7 +1531,7 @@ const Estoque = ({ inventories, fetchInventories, businessUnit }) => {
   const handleDelete = async (id) => {
     if(!window.confirm('Excluir este item?')) return;
     try {
-      await api.delete(`/inventories/${id}`);
+      await supabase.from('inventories').delete().eq('id', id);
       fetchInventories();
     } catch (e) {
       console.error(e);
@@ -1507,7 +1609,7 @@ function Configuracoes({ businessUnit }) {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/users`);
+      const res = await supabase.from('users').select('*');
       setUsers(res.data?.data?.map(u => ({ id: u.id, ...u.attributes })) || []);
     } catch (e) {
       console.error(e);
@@ -1518,7 +1620,7 @@ function Configuracoes({ businessUnit }) {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/logs`);
+      const res = await supabase.from('logs').select('*').order('createdAt', { ascending: false }).limit(100);
       setLogs(res.data || []);
     } catch (e) {
       console.error(e);
@@ -1534,7 +1636,7 @@ function Configuracoes({ businessUnit }) {
   const handleCreateUser = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/users', newUser);
+      await supabase.from('users').insert([newUser]);
       setShowUserModal(false);
       fetchUsers();
     } catch (e) {
@@ -1582,7 +1684,7 @@ function Configuracoes({ businessUnit }) {
                       <td>
                         <button className="btn" style={{padding: '0.3rem 0.6rem', fontSize: '0.8rem'}} onClick={async () => {
                            if(window.confirm('Excluir usuário?')) {
-                              await api.delete(`/users/${u.id}`);
+                              await supabase.from('users').delete().eq('id', u.id);
                               fetchUsers();
                            }
                         }}>🗑️</button>
@@ -1698,24 +1800,18 @@ function App() {
   const fetchData = async () => {
     try {
       const [uRes, cRes, rRes, iRes] = await Promise.all([
-        api.get(`/users?businessUnit=${businessUnit}`),
-        api.get(`/clients?businessUnit=${businessUnit}`),
-        api.get(`/repairs?businessUnit=${businessUnit}`),
-        api.get(`/inventories?businessUnit=${businessUnit}`)
+        supabase.from('users').select('*').eq('businessUnit', businessUnit),
+        supabase.from('clients').select('*').eq('businessUnit', businessUnit),
+        supabase.from('repairs').select('*').eq('businessUnit', businessUnit),
+        supabase.from('inventories').select('*').eq('businessUnit', businessUnit)
       ]);
-      const usersData = uRes.data?.data?.map(u => ({ id: u.id, ...u.attributes })) || [];
-      const clientsData = cRes.data?.data?.map(c => ({ id: c.id, ...c.attributes })) || [];
-      const inventoriesData = iRes.data?.data?.map(i => ({ id: i.id, ...i.attributes })) || [];
-      setUsersList(usersData);
-      setClientsList(clientsData);
+      
+      setUsersList(uRes.data || []);
+      setClientsList(cRes.data || []);
       setRepairsList(rRes.data || []);
-      setInventoriesList(inventoriesData);
+      setInventoriesList(iRes.data || []);
     } catch (e) {
-      console.error(e);
-      if (e.response?.status === 401) {
-         localStorage.clear();
-         window.location.reload();
-      }
+      console.error('Erro ao buscar dados:', e);
     }
   };
 

@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id         String   @id @default(uuid())
+  firstName  String
+  lastName   String
+  email      String   @unique
+  password   String
+  roles      String   @default("cliente")
+  department String   @default("Cliente")
+  status     String   @default("GUEST") // GUEST, ACTIVE, INACTIVE
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  logs       Log[]
+}
+
+model Client {
+  id           String   @id @default(uuid())
+  name         String
+  document     String?
+  phone        String?
+  email        String?
+  address      String?
+  score        Float    @default(0)
+  ltv          Float    @default(0)
+  status       String   @default("ACTIVE") // ACTIVE, INACTIVE, DEFAULTING
+  businessUnit String   @default("OFICINA")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  repairs      Repair[]
+  transactions Transaction[]
+}
+
+model Repair {
+  id           String   @id @default(uuid())
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id])
+  vehicleInfo  String?
+  description  String
+  items        Json?    
+  totalAmount  Float    @default(0)
+  status       String   @default("PENDING") // PENDING, APPROVED, IN_PROGRESS, COMPLETED, CANCELLED
+  businessUnit String   @default("OFICINA")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  transactions Transaction[]
+}
+
+model Inventory {
+  id           String   @id @default(uuid())
+  descricao    String
+  categoria    String   // PEÇA, SERVIÇO
+  quantidade   Int      @default(0)
+  valorVenda   Float
+  businessUnit String   @default("OFICINA")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Transaction {
+  id           String   @id @default(uuid())
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id])
+  repairId     String?
+  repair       Repair?  @relation(fields: [repairId], references: [id])
+  type         String   // INCOME, EXPENSE
+  amount       Float
+  description  String?
+  status       String   @default("PENDING") // PENDING, PAID, CANCELLED
+  dueDate      DateTime?
+  paidDate     DateTime?
+  businessUnit String   @default("OFICINA")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Log {
+  id           String   @id @default(uuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  action       String?
+  resource     String?
+  details      String?
+  businessUnit String   @default("OFICINA")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String
+  level       Int
+  permissions Json?    
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Access {
+  id        String   @id @default(uuid())
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

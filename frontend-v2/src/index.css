@@ -442,6 +442,21 @@ body {
   .header {
     margin-bottom: 1.5rem;
     gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .unit-selector {
+    width: 100% !important;
+    order: 3;
+    margin-top: 0.5rem;
+  }
+  
+  .user-profile {
+    order: 2;
+  }
+
+  .header > div:first-child {
+    order: 1;
   }
 
   .header h2 {

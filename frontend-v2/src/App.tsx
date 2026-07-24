@@ -1919,7 +1919,7 @@ function App() {
     <div className="app-container">
       <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`} style={{display: 'flex', flexDirection: 'column'}}>
-        <div className="brand" style={{flexDirection: 'column', alignItems: 'stretch', padding: '1.5rem 1rem', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem'}}>
+        <div className="brand" style={{flexDirection: 'column', alignItems: 'stretch', paddingBottom: '1.5rem', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem'}}>
           <img src="/logo-oficina.png" alt="Logo" style={{width: '100%', maxWidth: '240px', margin: '0 auto 1.5rem auto', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} />
           
           <div className="unit-selector" style={{display: 'flex', gap: '0.5rem', width: '100%', background: '#f1f5f9', padding: '0.5rem', borderRadius: '10px'}}>

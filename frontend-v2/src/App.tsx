@@ -1437,6 +1437,17 @@ const Login = ({ onLogin }) => {
         
         localStorage.setItem('token', data.session.access_token);
         localStorage.setItem('userId', data.user.id);
+        
+        // Registrar Log de Acesso
+        await supabase.from('logs').insert([{
+          userName: userObj.firstName + (userObj.lastName ? ' ' + userObj.lastName : ''),
+          userId: userObj.id,
+          action: 'LOGIN',
+          resource: 'Sistema',
+          details: 'Acesso ao sistema via email e senha',
+          businessUnit: 'OFICINA'
+        }]);
+        
         onLogin(userObj);
       }
     } catch (error) {

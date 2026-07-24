@@ -1439,14 +1439,18 @@ const Login = ({ onLogin }) => {
         localStorage.setItem('userId', data.user.id);
         
         // Registrar Log de Acesso
-        await supabase.from('logs').insert([{
-          userName: userObj.firstName + (userObj.lastName ? ' ' + userObj.lastName : ''),
-          userId: userObj.id,
-          action: 'LOGIN',
-          resource: 'Sistema',
-          details: 'Acesso ao sistema via email e senha',
-          businessUnit: 'OFICINA'
-        }]);
+        try {
+          await supabase.from('logs').insert([{
+            id: crypto.randomUUID(),
+            userId: userObj.id,
+            action: 'LOGIN',
+            resource: 'Sistema',
+            details: `Acesso ao sistema via email e senha. (Usuário: ${userObj.firstName})`,
+            businessUnit: 'OFICINA'
+          }]);
+        } catch (logErr) {
+          console.warn('Erro ao registrar log:', logErr);
+        }
         
         onLogin(userObj);
       }
@@ -1848,7 +1852,9 @@ function Configuracoes({ businessUnit }) {
                   {logs.map(log => (
                     <tr key={log._id}>
                       <td>{new Date(log.createdAt).toLocaleString()}</td>
-                      <td style={{fontWeight: 500}}>{log.userName}</td>
+                      <td style={{fontWeight: 500}}>
+                        {log.userName || (log.details?.includes('Usuário: ') ? log.details.split('Usuário: ')[1].replace(')', '') : 'Desconhecido')}
+                      </td>
                       <td>
                          <span className="status-badge" style={{background: log.action === 'DELETE' ? '#fee2e2' : log.action === 'CREATE' ? '#dcfce7' : '#e0e7ff', color: log.action === 'DELETE' ? '#991b1b' : log.action === 'CREATE' ? '#166534' : '#3730a3'}}>{log.action}</span>
                       </td>

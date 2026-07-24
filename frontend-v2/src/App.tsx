@@ -1746,29 +1746,35 @@ function Configuracoes({ businessUnit }) {
                 </tbody>
               </table>
       <div className="mobile-card-list show-on-mobile">
-        {clients.map(client => (
-          <div key={client._id || client.id} className="mobile-card-item" onClick={() => setSelectedClient(client)}>
+        {users.map(u => (
+          <div key={u.id} className="mobile-card-item">
             <div className="mobile-card-row">
               <span className="mobile-card-label">Nome:</span>
-              <span className="mobile-card-value">{client.nome}</span>
+              <span className="mobile-card-value">{u.firstName} {u.lastName}</span>
             </div>
             <div className="mobile-card-row">
-              <span className="mobile-card-label">Documento:</span>
-              <span className="mobile-card-value">{client.documento}</span>
+              <span className="mobile-card-label">Email:</span>
+              <span className="mobile-card-value">{u.email}</span>
             </div>
             <div className="mobile-card-row">
-              <span className="mobile-card-label">Telefone:</span>
-              <span className="mobile-card-value">{client.telefone}</span>
+              <span className="mobile-card-label">Departamento:</span>
+              <span className="mobile-card-value">{u.department || 'N/A'}</span>
             </div>
             <div className="mobile-card-row">
-              <span className="mobile-card-label">Perfil:</span>
-              <span className="mobile-card-value"><span className={`badge ${client.creditoAprovado ? 'success' : 'pending'}`}>{client.creditoAprovado ? 'Aprovado' : 'Em Análise'}</span></span>
+              <span className="mobile-card-label">Acesso:</span>
+              <span className="mobile-card-value">{u.roles}</span>
             </div>
-            <div className="mobile-card-actions" onClick={e => e.stopPropagation()}>
-               <button className="btn-primary" style={{padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#3b82f6', width: '100%'}} onClick={() => setEditingClient(client)}>Editar</button>
+            <div className="mobile-card-actions">
+               <button className="btn-primary" style={{padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#ef4444', width: '100%'}} onClick={async () => {
+                   if(window.confirm('Excluir usuário?')) {
+                      await supabase.from('users').delete().eq('id', u.id);
+                      fetchUsers();
+                   }
+                }}>Excluir</button>
             </div>
           </div>
         ))}
+        {users.length === 0 && !loading && <div style={{textAlign:'center', padding:'1rem'}}>Nenhum usuário encontrado</div>}
       </div>
             </div>
 
@@ -1876,7 +1882,7 @@ function App() {
   const fetchData = async () => {
     try {
       const [uRes, cRes, rRes, iRes] = await Promise.all([
-        supabase.from('users').select('*').eq('businessUnit', businessUnit),
+        supabase.from('users').select('*'),
         supabase.from('clients').select('*').eq('businessUnit', businessUnit),
         supabase.from('repairs').select('*').eq('businessUnit', businessUnit),
         supabase.from('inventories').select('*').eq('businessUnit', businessUnit)

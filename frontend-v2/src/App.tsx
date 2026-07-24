@@ -1918,35 +1918,35 @@ function App() {
   return (
     <div className="app-container">
       <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`} style={{display: 'flex', flexDirection: 'column'}}>
         <div className="brand" style={{flexDirection: 'column', alignItems: 'center', padding: '1.5rem 1rem', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem'}}>
           <img src="/logo-oficina.png" alt="Logo" style={{width: '100%', maxWidth: '240px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} />
         </div>
-        <nav className="nav-menu">
+        <nav className="nav-menu" style={{flex: 1}}>
           {navItems.map(item => (
             <div key={item.id} className={`nav-item ${activeTab === item.id ? 'active' : ''}`} onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }}>
               <span style={{marginRight: '10px'}}>{item.icon}</span>{item.label}
             </div>
           ))}
         </nav>
+        
+        <div style={{marginTop: 'auto', paddingTop: '2rem'}}>
+          <div className="unit-selector" style={{display: 'flex', gap: '0.5rem', width: '100%', background: '#f1f5f9', padding: '0.4rem', borderRadius: '8px', marginBottom: '1rem'}}>
+            <button style={{flex: 1, padding: '0.6rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'OFICINA' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'OFICINA' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('OFICINA')}>🚗 Oficina</button>
+            <button style={{flex: 1, padding: '0.6rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'ELEVADORES' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'ELEVADORES' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('ELEVADORES')}>🏢 Elevadores</button>
+          </div>
+          <div className="user-profile" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0'}}>
+            <div style={{fontWeight: 600, fontSize: '0.95rem', color: 'var(--text-primary)'}}>{user?.firstName || 'Admin'}</div>
+            <a href="#" onClick={(e) => { e.preventDefault(); localStorage.clear(); window.location.reload(); }} style={{fontSize: '0.85rem', color: 'var(--accent-main)', fontWeight: 600, textDecoration: 'none'}}>Sair</a>
+          </div>
+        </div>
       </aside>
 
       <main className="main-content">
-        <header className="header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <header className="header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
           <div style={{display: 'flex', alignItems: 'center', gap: '1rem', flex: 1}}>
             <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>☰</button>
-            <h2 className="hide-on-mobile">{navItems.find(i => i.id === activeTab)?.label}</h2>
-            <img src="/logo-oficina.png" alt="Logo" className="show-on-mobile" style={{height: '65px', objectFit: 'contain', marginLeft: '0.5rem'}} />
-          </div>
-          <div className="unit-selector" style={{display: 'flex', gap: '0.5rem', width: '250px', background: '#f1f5f9', padding: '0.3rem', borderRadius: '8px'}}>
-            <button style={{flex: 1, padding: '0.5rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'OFICINA' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'OFICINA' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('OFICINA')}>🚗 Oficina</button>
-            <button style={{flex: 1, padding: '0.5rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'ELEVADORES' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'ELEVADORES' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('ELEVADORES')}>🏢 Elevadores</button>
-          </div>
-          <div className="user-profile">
-            <div style={{textAlign: 'right'}}>
-              <div style={{fontWeight: 600, fontSize: '0.9rem'}}>{user?.firstName || 'Admin'}</div>
-              <a href="#" onClick={() => { localStorage.clear(); window.location.reload(); }} style={{fontSize: '0.7rem'}}>Sair</a>
-            </div>
+            <h2 style={{fontSize: '1.5rem', margin: 0}}>{navItems.find(i => i.id === activeTab)?.label}</h2>
           </div>
         </header>
         {renderContent()}

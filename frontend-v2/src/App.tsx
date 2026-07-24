@@ -90,7 +90,7 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS
               const b = parseDate(u.dataNascimento);
               const isToday = b.day === currentDay && b.month === currentMonth;
               return (
-                <tr key={u._id} style={{background: isToday ? '#ecfdf5' : 'transparent'}}>
+                <tr key={u.id} style={{background: isToday ? '#ecfdf5' : 'transparent'}}>
                   <td>
                     <div style={{fontWeight: 600, color: isToday ? 'var(--accent-success)' : 'inherit'}}>
                       {u.firstName} {u.lastName} {isToday && '🎉'}
@@ -172,8 +172,8 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS
           {repairs.map(r => {
              const client = getClient(r.clientId);
              return (
-              <tr key={r._id} style={{cursor: 'pointer'}} onClick={() => onOpenOS && onOpenOS(r)} title="Clique para ver detalhes">
-                <td style={{color: 'var(--text-primary)', fontWeight: 600}}>{r._id.slice(-6)}</td>
+              <tr key={r.id} style={{cursor: 'pointer'}} onClick={() => onOpenOS && onOpenOS(r)} title="Clique para ver detalhes">
+                <td style={{color: 'var(--text-primary)', fontWeight: 600}}>{r.id.slice(-6)}</td>
                 <td><div style={{fontWeight: 600}}>{client.firstName} {client.lastName}</div></td>
                 <td><div style={{fontWeight: 500, color: 'var(--text-secondary)'}}>{r.equipmentId || '-'}</div></td>
                 <td><div style={{fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase'}}>{r.defeitoInformado || '-'}</div></td>
@@ -821,7 +821,7 @@ const OrcamentoToOS = ({ clients, repairs, fetchRepairs, inventories, onNavigate
   };
 
   const handleDeleteOS = async (repair) => {
-    if (window.confirm(`Tem certeza que deseja excluir a OS #${repair._id.slice(-6)}?`)) {
+    if (window.confirm(`Tem certeza que deseja excluir a OS #${repair.id.slice(-6)}?`)) {
       try {
         await supabase.from('repairs').delete().eq('id', repair.id || repair._id);
         fetchRepairs();
@@ -853,8 +853,8 @@ const OrcamentoToOS = ({ clients, repairs, fetchRepairs, inventories, onNavigate
             {orcamentos.map(r => {
               const client = getClient(r.clientId);
               return (
-                <tr key={r._id} onDoubleClick={() => setSelectedRepair(r)} style={{cursor: 'pointer'}} title="Dê 2 cliques para visualizar">
-                  <td style={{fontWeight: 600}}>{r._id.slice(-6)}</td>
+                <tr key={r.id} onDoubleClick={() => setSelectedRepair(r)} style={{cursor: 'pointer'}} title="Dê 2 cliques para visualizar">
+                  <td style={{fontWeight: 600}}>{r.id.slice(-6)}</td>
                   <td>{client.firstName} {client.lastName}</td>
                   <td style={{fontWeight: 500, color: 'var(--text-secondary)'}}>{r.equipmentId || '-'}</td>
                   <td style={{fontWeight: 700, textTransform: 'uppercase'}}>{r.defeitoInformado || '-'}</td>
@@ -899,7 +899,7 @@ const OrcamentoToOS = ({ clients, repairs, fetchRepairs, inventories, onNavigate
       <div style={{display: 'flex', gap: '2rem'}}>
         <div className="glass-card" style={{flex: 1}}>
           <div style={{display:'flex', justifyContent:'space-between'}}>
-             <h3 className="section-title">Aprovar Orçamento #{selectedRepair._id.slice(-6)}</h3>
+             <h3 className="section-title">Aprovar Orçamento #{selectedRepair.id.slice(-6)}</h3>
              <button onClick={() => setSelectedRepair(null)} style={{cursor:'pointer', border:'none', background:'none'}}>⬅️ Voltar</button>
           </div>
           <div style={{background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1rem'}}>
@@ -962,7 +962,7 @@ const PrintableOS = ({ os, client, onBack }) => {
         <button onClick={() => window.print()} className="btn-primary">🖨️ Imprimir OS</button>
       </div>
       <div className="print-area">
-        <h2 style={{borderBottom: '2px solid #000', paddingBottom: '1rem', marginTop: 0}}>Ordem de Serviço #{os._id.slice(-6).toUpperCase()}</h2>
+        <h2 style={{borderBottom: '2px solid #000', paddingBottom: '1rem', marginTop: 0}}>Ordem de Serviço #{os.id.slice(-6).toUpperCase()}</h2>
         <div style={{display: 'flex', justifyContent: 'space-between', margin: '2rem 0'}}>
           <div>
             <h4>Dados do Cliente</h4>
@@ -1081,7 +1081,7 @@ const EditorDeOS = ({ repair, fetchRepairs, inventories, onClose }) => {
   return (
     <div className="glass-card" style={{maxWidth: '800px', margin: '0 auto'}}>
       <div style={{display:'flex', justifyContent:'space-between'}}>
-         <h3 className="section-title">Lançar Serviços / Peças - OS #{editingOS._id.slice(-6)}</h3>
+         <h3 className="section-title">Lançar Serviços / Peças - OS #{editingOS.id.slice(-6)}</h3>
          <button onClick={onClose} style={{cursor:'pointer', border:'none', background:'none'}}>⬅️ Voltar</button>
       </div>
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -1229,7 +1229,7 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
   };
 
   const handleDeleteOS = async (repair) => {
-    if (window.confirm(`Tem certeza que deseja excluir a OS #${repair._id.slice(-6)}?`)) {
+    if (window.confirm(`Tem certeza que deseja excluir a OS #${repair.id.slice(-6)}?`)) {
       try {
         await supabase.from('repairs').delete().eq('id', repair.id || repair._id);
         fetchRepairs();
@@ -1248,7 +1248,7 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
       <div style={{display: 'flex', gap: '2rem'}}>
         <div className="glass-card" style={{flex: 1}}>
           <div style={{display:'flex', justifyContent:'space-between'}}>
-             <h3 className="section-title">Finalizar OS #{selectedOS._id.slice(-6)}</h3>
+             <h3 className="section-title">Finalizar OS #{selectedOS.id.slice(-6)}</h3>
              <button onClick={() => {setSelectedOS(null); setMensagem('');}} style={{cursor:'pointer', border:'none', background:'none'}}>⬅️ Voltar</button>
           </div>
           <div style={{background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1rem'}}>
@@ -1326,8 +1326,8 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
              const client = getClient(r.clientId);
              const total = (r.materiais || []).reduce((acc, m) => acc + (m.total || 0), 0);
              return (
-              <tr key={r._id} onDoubleClick={() => { setSelectedOS(r); setPaymentMethod(r.paymentMethod || ''); }} style={{cursor: 'pointer'}} title="Dê 2 cliques para visualizar e finalizar">
-                <td style={{fontWeight: 600}}>{r._id.slice(-6)}</td>
+              <tr key={r.id} onDoubleClick={() => { setSelectedOS(r); setPaymentMethod(r.paymentMethod || ''); }} style={{cursor: 'pointer'}} title="Dê 2 cliques para visualizar e finalizar">
+                <td style={{fontWeight: 600}}>{r.id.slice(-6)}</td>
                 <td>{client.firstName} {client.lastName}</td>
                 <td style={{fontWeight: 500, color: 'var(--text-secondary)'}}>{r.equipmentId || '-'}</td>
                 <td style={{fontWeight: 700, textTransform: 'uppercase'}}>{r.defeitoInformado || '-'}</td>
@@ -1859,7 +1859,7 @@ function Configuracoes({ businessUnit }) {
                 </thead>
                 <tbody>
                   {logs.map(log => (
-                    <tr key={log._id}>
+                    <tr key={log.id}>
                       <td>{new Date(log.createdAt).toLocaleString()}</td>
                       <td style={{fontWeight: 500}}>
                         {log.userName || (log.details?.includes('Usuário: ') ? log.details.split('Usuário: ')[1].replace(')', '') : 'Desconhecido')}

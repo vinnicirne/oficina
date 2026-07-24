@@ -451,7 +451,7 @@ const Clientes = ({ clients, fetchClients }) => {
         </div>
         <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
           <h4 style={{margin: '0 0 -0.5rem 0', color: 'var(--text-secondary)'}}>Dados Pessoais / Contato</h4>
-          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
+          <div className="form-row">
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Nome da Empresa / Cliente</label>
               <input type="text" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
@@ -461,7 +461,7 @@ const Clientes = ({ clients, fetchClients }) => {
               <input type="text" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
             </div>
           </div>
-          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
+          <div className="form-row">
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Email</label>
               <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
@@ -472,7 +472,7 @@ const Clientes = ({ clients, fetchClients }) => {
             </div>
           </div>
 
-          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
+          <div className="form-row">
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>CNPJ / CPF</label>
               <input type="text" value={formData.cnpj} onChange={e => setFormData({...formData, cnpj: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -493,7 +493,7 @@ const Clientes = ({ clients, fetchClients }) => {
           </div>
 
           <h4 style={{margin: '1rem 0 -0.5rem 0', color: 'var(--text-secondary)'}}>Endereço</h4>
-          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
+          <div className="form-row">
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>CEP</label>
               <input type="text" placeholder="Apenas números" maxLength="9" value={formData.cep} onChange={handleCepChange} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -507,7 +507,7 @@ const Clientes = ({ clients, fetchClients }) => {
               <input type="text" value={formData.uf} onChange={e => setFormData({...formData, uf: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
             </div>
           </div>
-          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem'}}>
+          <div className="form-row" style={{marginTop: '1rem'}}>
             <div style={{flex: 2}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Endereço / Logradouro</label>
               <input type="text" value={formData.endereco} onChange={e => setFormData({...formData, endereco: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -517,7 +517,7 @@ const Clientes = ({ clients, fetchClients }) => {
               <input type="text" value={formData.numero} onChange={e => setFormData({...formData, numero: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
             </div>
           </div>
-          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem'}}>
+          <div className="form-row" style={{marginTop: '1rem'}}>
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Complemento</label>
               <input type="text" value={formData.complemento} onChange={e => setFormData({...formData, complemento: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -529,7 +529,7 @@ const Clientes = ({ clients, fetchClients }) => {
           </div>
 
           <h4 style={{margin: '1rem 0 -0.5rem 0', color: 'var(--text-secondary)'}}>Financeiro</h4>
-          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
+          <div className="form-row">
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Limite de Crédito Inicial (R$)</label>
               <input type="number" value={formData.limiteCredito} onChange={e => setFormData({...formData, limiteCredito: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -1777,7 +1777,7 @@ function Configuracoes({ businessUnit }) {
                 <div className="modal-content" style={{background: '#fff', padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '500px'}}>
                   <h2>Criar Novo Usuário</h2>
                   <form onSubmit={handleCreateUser} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                    <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
+                    <div className="form-row">
                        <input className="input-field" placeholder="Nome" required onChange={e => setNewUser({...newUser, firstName: e.target.value})} />
                        <input className="input-field" placeholder="Sobrenome" required onChange={e => setNewUser({...newUser, lastName: e.target.value})} />
                     </div>
@@ -1801,7 +1801,7 @@ function Configuracoes({ businessUnit }) {
                       <option value="admin">Admin</option>
                     </select>
 
-                    <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem'}}>
+                    <div className="form-row" style={{marginTop: '1rem'}}>
                       <button type="submit" className="btn btn-primary" style={{flex: 1}}>Salvar</button>
                       <button type="button" className="btn" style={{flex: 1}} onClick={() => setShowUserModal(false)}>Cancelar</button>
                     </div>

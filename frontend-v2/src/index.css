@@ -394,6 +394,12 @@ body {
   padding-top: 1rem;
 }
 
+.form-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 /* Utilitários de Visibilidade */
 .show-on-mobile { display: none !important; }
 .hide-on-mobile { display: block !important; }
@@ -408,7 +414,6 @@ body {
     display: block;
   }
 
-  /* Sidebar flutuante no mobile */
   .sidebar {
     position: fixed;
     top: 0;
@@ -427,9 +432,13 @@ body {
     display: block;
   }
 
-  /* Dashboard Adjustments */
   .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-row {
+    flex-direction: column;
     gap: 1rem;
   }
 

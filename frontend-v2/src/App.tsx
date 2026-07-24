@@ -2,6 +2,56 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabase';
 import './index.css';
 
+export const enviarWhatsApp = async (cliente, os) => {
+  if (!cliente || (!cliente.telefone && !cliente.phone)) {
+    alert('Cliente sem telefone cadastrado.');
+    return;
+  }
+  
+  let phone = (cliente.telefone || cliente.phone).replace(/\D/g, '');
+  if (!phone.startsWith('55')) phone = '55' + phone;
+
+  const url = import.meta.env.VITE_EVOLUTION_API_URL;
+  const instance = import.meta.env.VITE_EVOLUTION_INSTANCE;
+  const apikey = import.meta.env.VITE_EVOLUTION_API_KEY;
+
+  if (!url || !instance || !apikey) {
+    alert('WhatsApp não configurado. Adicione no .env as variáveis do Evolution API.');
+    return;
+  }
+
+  try {
+    const resState = await fetch(`${url}/instance/connectionState/${instance}`, { headers: { 'apikey': apikey } });
+    const stateData = await resState.json();
+    if (stateData?.instance?.state !== 'open') {
+      alert('WhatsApp desconectado. Vá em Configurações e escaneie o QR Code.');
+      return;
+    }
+
+    const tipo = (os.status === 'ORCAMENTO' || os.status === 'AGUARDANDO_APROVACAO') ? 'Orçamento' : 'Ordem de Serviço';
+    const valorTotal = (os.materiais || []).reduce((acc, m) => acc + (m.total || 0), 0) + (os.valorServico || 0) - (os.desconto || 0);
+    const text = `Olá, ${cliente.firstName || cliente.nome}!\n\nSeu ${tipo} *#${(os.id || os._id).slice(-6).toUpperCase()}* foi atualizado.\n\nVeículo: ${os.equipmentId || 'N/A'}\nServiço: ${os.servicoSolicitado || 'N/A'}\n\n*Total:* R$ ${valorTotal.toFixed(2).replace('.', ',')}\n\nA Oficina Betel agradece a preferência!`;
+
+    // Simular digitação
+    await fetch(`${url}/chat/sendPresence/${instance}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': apikey },
+      body: JSON.stringify({ number: phone, delay: 2500, presence: "composing" })
+    });
+
+    // Enviar mensagem
+    await fetch(`${url}/message/sendText/${instance}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': apikey },
+      body: JSON.stringify({ number: phone, text, delay: 3000 })
+    });
+    
+    alert('Mensagem enviada com sucesso para o WhatsApp do cliente!');
+  } catch (e) {
+    alert('Erro ao enviar mensagem: ' + e.message);
+  }
+};
+
 const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS }) => {
   const [showBirthdays, setShowBirthdays] = useState(false);
   const [filterDay, setFilterDay] = useState('');
@@ -867,7 +917,8 @@ const OrcamentoToOS = ({ clients, repairs, fetchRepairs, inventories, onNavigate
                   <td style={{display: 'flex', gap: '0.4rem', whiteSpace: 'nowrap'}}>
                     <button className="btn-primary" style={{background: '#f59e0b', padding: '0.3rem 0.6rem', fontSize: '0.75rem'}} onClick={() => setEditingOS(r)}>✏️ Editar</button>
                     <button className="btn-primary" style={{padding: '0.3rem 0.6rem', fontSize: '0.75rem'}} onClick={() => setSelectedRepair(r)}>👁️ Visualizar</button>
-                    <button className="btn-primary" style={{background: '#ef4444', padding: '0.3rem 0.6rem', fontSize: '0.75rem'}} onClick={() => handleDeleteOS(r)} title="Excluir">🗑️</button>
+                    <button className="btn-primary" style={{background: '#22c55e', padding: '0.3rem 0.6rem', fontSize: '0.75rem'}} onClick={(e) => { e.stopPropagation(); enviarWhatsApp(client, r); }} title="Enviar no WhatsApp">Enviar</button>
+                    <button className="btn-primary" style={{background: '#ef4444', padding: '0.3rem 0.6rem', fontSize: '0.75rem'}} onClick={(e) => { e.stopPropagation(); handleDeleteOS(r); }} title="Excluir">🗑️</button>
                   </td>
                 </tr>
               )
@@ -1348,7 +1399,8 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
                       {r.status === 'EM_EXECUCAO' ? '✅' : '💳'}
                     </button>
                   )}
-                  <button className="btn-primary" style={{background: '#ef4444', padding: '0.4rem 0.6rem', fontSize: '1rem'}} onClick={() => handleDeleteOS(r)} title="Excluir">🗑️</button>
+                  <button className="btn-primary" style={{background: '#22c55e', padding: '0.4rem 0.6rem', fontSize: '1rem'}} onClick={(e) => { e.stopPropagation(); enviarWhatsApp(client, r); }} title="Enviar no WhatsApp">Enviar</button>
+                  <button className="btn-primary" style={{background: '#ef4444', padding: '0.4rem 0.6rem', fontSize: '1rem'}} onClick={(e) => { e.stopPropagation(); handleDeleteOS(r); }} title="Excluir">🗑️</button>
                 </td>
               </tr>
              )
@@ -1680,6 +1732,52 @@ function Configuracoes({ businessUnit }) {
   const [showUserModal, setShowUserModal] = useState(false);
   const [newUser, setNewUser] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', department: 'Mecânico', roles: 'user', businessUnit: 'AMBOS' });
 
+  const [wpStatus, setWpStatus] = useState('disconnected');
+  const [wpQr, setWpQr] = useState('');
+  const [wpLoading, setWpLoading] = useState(false);
+
+  const fetchWpStatus = async () => {
+    setWpLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_EVOLUTION_API_URL}/instance/connectionState/${import.meta.env.VITE_EVOLUTION_INSTANCE}`, {
+        headers: { 'apikey': import.meta.env.VITE_EVOLUTION_API_KEY }
+      });
+      const data = await res.json();
+      setWpStatus(data?.instance?.state || 'disconnected');
+      if (data?.instance?.state !== 'open') {
+        fetchWpQr();
+      }
+    } catch (e) {
+      console.error('Erro Wp', e);
+    }
+    setWpLoading(false);
+  };
+
+  const fetchWpQr = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_EVOLUTION_API_URL}/instance/connect/${import.meta.env.VITE_EVOLUTION_INSTANCE}`, {
+        headers: { 'apikey': import.meta.env.VITE_EVOLUTION_API_KEY }
+      });
+      const data = await res.json();
+      if (data.base64) setWpQr(data.base64);
+    } catch (e) {
+      console.error('Erro QR', e);
+    }
+  };
+
+  const handleWpDisconnect = async () => {
+    if (!window.confirm('Desconectar o WhatsApp?')) return;
+    try {
+      await fetch(`${import.meta.env.VITE_EVOLUTION_API_URL}/instance/logout/${import.meta.env.VITE_EVOLUTION_INSTANCE}`, {
+        method: 'DELETE',
+        headers: { 'apikey': import.meta.env.VITE_EVOLUTION_API_KEY }
+      });
+      setWpStatus('disconnected');
+      setWpQr('');
+      fetchWpStatus();
+    } catch(e) {}
+  };
+
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -1705,6 +1803,7 @@ function Configuracoes({ businessUnit }) {
   useEffect(() => {
     if (activeTab === 'usuarios') fetchUsers();
     if (activeTab === 'logs') fetchLogs();
+    if (activeTab === 'whatsapp') fetchWpStatus();
   }, [activeTab, businessUnit]);
 
   const handleCreateUser = async (e) => {
@@ -1726,6 +1825,9 @@ function Configuracoes({ businessUnit }) {
         </button>
         <button className="btn" style={{ textAlign: 'left', padding: '1rem', background: activeTab === 'logs' ? 'var(--accent-main)' : '#fff', color: activeTab === 'logs' ? '#fff' : '#333' }} onClick={() => setActiveTab('logs')}>
           🛡️ Logs de Auditoria
+        </button>
+        <button className="btn" style={{ textAlign: 'left', padding: '1rem', background: activeTab === 'whatsapp' ? 'var(--accent-main)' : '#fff', color: activeTab === 'whatsapp' ? '#fff' : '#333' }} onClick={() => setActiveTab('whatsapp')}>
+          💬 Conexão WhatsApp
         </button>
       </div>
 
@@ -1875,6 +1977,43 @@ function Configuracoes({ businessUnit }) {
                   {loading && <tr><td colSpan={5} style={{textAlign:'center'}}>Carregando logs...</td></tr>}
                 </tbody>
               </table></div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'whatsapp' && (
+          <div>
+            <h2>Conexão WhatsApp (Evolution API)</h2>
+            <p style={{color: 'var(--text-secondary)', marginBottom: '1.5rem'}}>
+              Gerencie a conexão do número oficial de envio de relatórios e mensagens.
+            </p>
+            
+            <div style={{background: '#f8fafc', padding: '2rem', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem'}}>
+              {wpLoading ? (
+                <div style={{padding: '2rem'}}>Carregando status...</div>
+              ) : wpStatus === 'open' ? (
+                <>
+                  <div style={{width: '80px', height: '80px', background: '#dcfce7', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem'}}>✅</div>
+                  <h3 style={{color: '#166534', margin: 0}}>WhatsApp Conectado!</h3>
+                  <p style={{textAlign: 'center', color: 'var(--text-secondary)'}}>O sistema está pronto para enviar mensagens automáticas.</p>
+                  <button className="btn-primary" style={{background: '#ef4444', marginTop: '1rem'}} onClick={handleWpDisconnect}>Desconectar</button>
+                </>
+              ) : wpQr ? (
+                <>
+                  <h3>Escaneie o QR Code</h3>
+                  <p style={{textAlign: 'center', color: 'var(--text-secondary)'}}>Abra o WhatsApp no celular oficial, vá em "Aparelhos Conectados" e aponte a câmera para o código abaixo.</p>
+                  <div style={{background: '#fff', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
+                    <img src={wpQr} alt="QR Code WhatsApp" style={{width: '250px', height: '250px'}} />
+                  </div>
+                  <button className="btn" onClick={fetchWpStatus} style={{marginTop: '1rem'}}>Atualizar Status</button>
+                </>
+              ) : (
+                <>
+                  <div style={{width: '80px', height: '80px', background: '#fee2e2', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem'}}>❌</div>
+                  <h3 style={{color: '#991b1b', margin: 0}}>WhatsApp Desconectado</h3>
+                  <button className="btn-primary" onClick={fetchWpStatus} style={{marginTop: '1rem'}}>Conectar Agora</button>
+                </>
+              )}
             </div>
           </div>
         )}

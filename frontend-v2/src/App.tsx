@@ -419,11 +419,16 @@ const Clientes = ({ clients, fetchClients }) => {
       };
 
       if (editingClient) {
-        await supabase.from('clients').update(payload).eq('id', editingClient.id || editingClient._id);
+        const { error } = await supabase.from('clients').update(payload).eq('id', editingClient.id || editingClient._id);
+        if (error) throw error;
         setMensagem('✅ Cliente atualizado com sucesso!');
+        await supabase.from('logs').insert([{ id: crypto.randomUUID(), userId: localStorage.getItem('userId'), action: 'UPDATE', resource: 'Cliente', details: `Cliente ${payload.firstName} editado`, businessUnit: payload.businessUnit }]);
       } else {
-        await supabase.from('clients').insert([payload]);
+        payload.id = crypto.randomUUID();
+        const { error } = await supabase.from('clients').insert([payload]);
+        if (error) throw error;
         setMensagem('✅ Cliente cadastrado com sucesso!');
+        await supabase.from('logs').insert([{ id: crypto.randomUUID(), userId: localStorage.getItem('userId'), action: 'CREATE', resource: 'Cliente', details: `Cliente ${payload.firstName} cadastrado`, businessUnit: payload.businessUnit }]);
       }
       
       fetchClients();
@@ -646,7 +651,8 @@ const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose
     }));
 
     try {
-      await supabase.from('repairs').insert([{
+      const { error } = await supabase.from('repairs').insert([{
+        id: crypto.randomUUID(),
         clientId: novaOSForm.clientId,
         equipmentId: novaOSForm.equipmentId,
         defeitoInformado: novaOSForm.placa,
@@ -656,6 +662,7 @@ const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose
         status: novaOSForm.status,
         businessUnit
       }]);
+      if (error) throw error;
       setMensagem('✅ Sucesso! Registro criado.');
       fetchRepairs();
       setTimeout(() => { 
@@ -1577,13 +1584,15 @@ const Estoque = ({ inventories, fetchInventories, businessUnit }) => {
     if (!novoItem.descricao || !novoItem.valorVenda) return;
     setLoading(true);
     try {
-      await supabase.from('inventories').insert([{
+      const { error } = await supabase.from('inventories').insert([{
+        id: crypto.randomUUID(),
         descricao: novoItem.descricao,
         categoria: novoItem.categoria,
         valorVenda: Number(novoItem.valorVenda),
         quantidade: Number(novoItem.quantidade),
         businessUnit
       }]);
+      if (error) throw error;
       fetchInventories();
       setNovoItem({ descricao: '', categoria: 'PEÇA', valorVenda: '', quantidade: 1 });
     } catch (err) {

@@ -58,7 +58,7 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS
           <button className="btn-primary" style={{background: 'var(--text-secondary)'}} onClick={() => setShowBirthdays(false)}>⬅️ Voltar</button>
         </div>
         
-        <div style={{display: 'flex', gap: '1rem', marginBottom: '1.5rem'}}>
+        <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem'}}>
           <div>
             <label style={{display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem'}}>Dia</label>
             <input type="number" placeholder="DD" value={filterDay} onChange={e => setFilterDay(e.target.value)} style={{padding: '0.5rem', borderRadius: '6px', border: '1px solid #e2e8f0', width: '80px'}} />
@@ -76,7 +76,7 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS
           </div>
         </div>
 
-        <table className="data-table">
+        <table className="data-table hide-on-mobile-table">
           <thead>
             <tr>
               <th>Nome</th>
@@ -105,6 +105,31 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS
             {list.length === 0 && <tr><td colSpan={4}>Nenhum aniversariante encontrado para os filtros.</td></tr>}
           </tbody>
         </table>
+      <div className="mobile-card-list show-on-mobile">
+        {clients.map(client => (
+          <div key={client._id || client.id} className="mobile-card-item" onClick={() => setSelectedClient(client)}>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Nome:</span>
+              <span className="mobile-card-value">{client.nome}</span>
+            </div>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Documento:</span>
+              <span className="mobile-card-value">{client.documento}</span>
+            </div>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Telefone:</span>
+              <span className="mobile-card-value">{client.telefone}</span>
+            </div>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Perfil:</span>
+              <span className="mobile-card-value"><span className={`badge ${client.creditoAprovado ? 'success' : 'pending'}`}>{client.creditoAprovado ? 'Aprovado' : 'Em Análise'}</span></span>
+            </div>
+            <div className="mobile-card-actions" onClick={e => e.stopPropagation()}>
+               <button className="btn-primary" style={{padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#3b82f6', width: '100%'}} onClick={() => setEditingClient(client)}>Editar</button>
+            </div>
+          </div>
+        ))}
+      </div>
       </div>
     );
   }
@@ -132,7 +157,7 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS
       </div>
 
       <h3 className="section-title">Últimas Atividades ({businessUnit})</h3>
-      <table className="data-table">
+      <div style={{overflowX: 'auto'}}><table className="data-table hide-on-mobile-table">
         <thead>
           <tr>
             <th>ID</th>
@@ -159,7 +184,7 @@ const Dashboard = ({ businessUnit, users, repairs, clients, onNavigate, onOpenOS
           })}
           {repairs.length === 0 && <tr><td colSpan={4}>Nenhum registro encontrado.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
     </>
   );
 };
@@ -247,7 +272,7 @@ const ClientCreditProfile = ({ client, onClose, onUpdateClient }) => {
       </div>
 
       <h4 style={{marginBottom: '1rem', fontSize: '1.2rem', color: 'var(--text-primary)'}}>Histórico de Faturas e Serviços</h4>
-      <table className="data-table">
+      <div style={{overflowX: 'auto'}}><table className="data-table hide-on-mobile-table">
         <thead>
           <tr>
             <th>Vencimento</th>
@@ -283,7 +308,7 @@ const ClientCreditProfile = ({ client, onClose, onUpdateClient }) => {
           )})}
           {transactions.length === 0 && <tr><td colSpan={5}>Nenhuma movimentação encontrada.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 };
@@ -426,7 +451,7 @@ const Clientes = ({ clients, fetchClients }) => {
         </div>
         <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
           <h4 style={{margin: '0 0 -0.5rem 0', color: 'var(--text-secondary)'}}>Dados Pessoais / Contato</h4>
-          <div style={{display: 'flex', gap: '1rem'}}>
+          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Nome da Empresa / Cliente</label>
               <input type="text" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
@@ -436,7 +461,7 @@ const Clientes = ({ clients, fetchClients }) => {
               <input type="text" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
             </div>
           </div>
-          <div style={{display: 'flex', gap: '1rem'}}>
+          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Email</label>
               <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
@@ -447,7 +472,7 @@ const Clientes = ({ clients, fetchClients }) => {
             </div>
           </div>
 
-          <div style={{display: 'flex', gap: '1rem'}}>
+          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>CNPJ / CPF</label>
               <input type="text" value={formData.cnpj} onChange={e => setFormData({...formData, cnpj: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -468,7 +493,7 @@ const Clientes = ({ clients, fetchClients }) => {
           </div>
 
           <h4 style={{margin: '1rem 0 -0.5rem 0', color: 'var(--text-secondary)'}}>Endereço</h4>
-          <div style={{display: 'flex', gap: '1rem'}}>
+          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>CEP</label>
               <input type="text" placeholder="Apenas números" maxLength="9" value={formData.cep} onChange={handleCepChange} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -482,7 +507,7 @@ const Clientes = ({ clients, fetchClients }) => {
               <input type="text" value={formData.uf} onChange={e => setFormData({...formData, uf: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
             </div>
           </div>
-          <div style={{display: 'flex', gap: '1rem', marginTop: '1rem'}}>
+          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem'}}>
             <div style={{flex: 2}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Endereço / Logradouro</label>
               <input type="text" value={formData.endereco} onChange={e => setFormData({...formData, endereco: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -492,7 +517,7 @@ const Clientes = ({ clients, fetchClients }) => {
               <input type="text" value={formData.numero} onChange={e => setFormData({...formData, numero: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
             </div>
           </div>
-          <div style={{display: 'flex', gap: '1rem', marginTop: '1rem'}}>
+          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem'}}>
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Complemento</label>
               <input type="text" value={formData.complemento} onChange={e => setFormData({...formData, complemento: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -504,7 +529,7 @@ const Clientes = ({ clients, fetchClients }) => {
           </div>
 
           <h4 style={{margin: '1rem 0 -0.5rem 0', color: 'var(--text-secondary)'}}>Financeiro</h4>
-          <div style={{display: 'flex', gap: '1rem'}}>
+          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
             <div style={{flex: 1}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Limite de Crédito Inicial (R$)</label>
               <input type="number" value={formData.limiteCredito} onChange={e => setFormData({...formData, limiteCredito: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -542,7 +567,7 @@ const Clientes = ({ clients, fetchClients }) => {
         <h3 className="section-title" style={{margin: 0}}>Gestão de Clientes e Crédito</h3>
         <button className="btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>+ Novo Cliente</button>
       </div>
-      <table className="data-table">
+      <table className="data-table hide-on-mobile-table">
         <thead>
           <tr>
             <th>Nome</th>
@@ -569,6 +594,31 @@ const Clientes = ({ clients, fetchClients }) => {
           {clients.length === 0 && <tr><td colSpan={5}>Nenhum cliente cadastrado.</td></tr>}
         </tbody>
       </table>
+      <div className="mobile-card-list show-on-mobile">
+        {clients.map(client => (
+          <div key={client._id || client.id} className="mobile-card-item" onClick={() => setSelectedClient(client)}>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Nome:</span>
+              <span className="mobile-card-value">{client.nome}</span>
+            </div>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Documento:</span>
+              <span className="mobile-card-value">{client.documento}</span>
+            </div>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Telefone:</span>
+              <span className="mobile-card-value">{client.telefone}</span>
+            </div>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Perfil:</span>
+              <span className="mobile-card-value"><span className={`badge ${client.creditoAprovado ? 'success' : 'pending'}`}>{client.creditoAprovado ? 'Aprovado' : 'Em Análise'}</span></span>
+            </div>
+            <div className="mobile-card-actions" onClick={e => e.stopPropagation()}>
+               <button className="btn-primary" style={{padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#3b82f6', width: '100%'}} onClick={() => setEditingClient(client)}>Editar</button>
+            </div>
+          </div>
+        ))}
+      </div>
     </>
   );
 };
@@ -646,7 +696,7 @@ const NovaOSModal = ({ clients, inventories, businessUnit, fetchRepairs, onClose
               <option value="EM_EXECUCAO">Ordem de Serviço</option>
             </select>
           </div>
-          <div style={{display: 'flex', gap: '1rem', marginBottom: '1rem'}}>
+          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem'}}>
             <div style={{flex: 2}}>
               <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Veículo (Modelo)</label>
               <input type="text" placeholder="Ex: Toyota Corolla" value={novaOSForm.equipmentId} onChange={e => setNovaOSForm({...novaOSForm, equipmentId: e.target.value})} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} />
@@ -790,7 +840,7 @@ const OrcamentoToOS = ({ clients, repairs, fetchRepairs, inventories, onNavigate
           <h3 className="section-title" style={{margin: 0}}>Selecione um Orçamento para Aprovar</h3>
           <button className="btn-primary" onClick={() => setShowNovaOS(true)}>+ Novo Orçamento</button>
         </div>
-        <table className="data-table">
+        <div style={{overflowX: 'auto'}}><table className="data-table hide-on-mobile-table">
           <thead><tr><th>ID</th><th>Cliente</th><th>Veículo</th><th>Placa</th><th>Serviço</th><th>Status</th><th>Ação</th></tr></thead>
           <tbody>
             {orcamentos.map(r => {
@@ -817,7 +867,7 @@ const OrcamentoToOS = ({ clients, repairs, fetchRepairs, inventories, onNavigate
             })}
             {orcamentos.length === 0 && <tr><td colSpan={5}>Nenhum orçamento pendente.</td></tr>}
           </tbody>
-        </table>
+        </table></div>
         
         {viewingService && (
           <div className="modal-overlay" onClick={() => setViewingService(null)}>
@@ -1030,7 +1080,7 @@ const EditorDeOS = ({ repair, fetchRepairs, inventories, onClose }) => {
       <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
         <div>
           <p style={{marginBottom: '0.8rem'}}><strong>Serviço Solicitado:</strong> {editingOS.servicoSolicitado}</p>
-          <div style={{display: 'flex', gap: '1rem', marginBottom: '0.8rem'}}>
+          <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.8rem'}}>
             <div style={{flex: 1}}>
               <label style={{display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.2rem', color: 'var(--text-secondary)'}}>Veículo (Modelo)</label>
               <input type="text" value={editingOS.equipmentId || ''} onChange={e => setEditingOS({...editingOS, equipmentId: e.target.value})} style={{padding: '0.5rem', borderRadius: '6px', border: '1px solid #ccc', width: '100%'}} />
@@ -1059,7 +1109,7 @@ const EditorDeOS = ({ repair, fetchRepairs, inventories, onClose }) => {
       
       <div style={{background: '#f8fafc', padding: '1rem', borderRadius: '8px', margin: '1.5rem 0'}}>
         <h4 style={{marginBottom: '1rem'}}>Adicionar Novo Item</h4>
-        <div style={{display: 'flex', gap: '1rem', alignItems: 'flex-end'}}>
+        <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end'}}>
           <div style={{flex: 3}}>
             <label style={{display:'block', fontSize:'0.8rem', fontWeight:600}}>Item (Catálogo)</label>
             <select value={novoMaterial.descricao} onChange={e => {
@@ -1089,7 +1139,7 @@ const EditorDeOS = ({ repair, fetchRepairs, inventories, onClose }) => {
       </div>
 
       <h4>Itens Lançados</h4>
-      <table className="data-table">
+      <div style={{overflowX: 'auto'}}><table className="data-table hide-on-mobile-table">
         <thead><tr><th>Item</th><th>Qtd</th><th>Unit.</th><th>Total</th><th>Ação</th></tr></thead>
         <tbody>
           {(editingOS.materiais || []).map((m, i) => (
@@ -1100,7 +1150,7 @@ const EditorDeOS = ({ repair, fetchRepairs, inventories, onClose }) => {
           ))}
           {(!editingOS.materiais || editingOS.materiais.length === 0) && <tr><td colSpan="5">Nenhum item lançado.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
       <h3 style={{textAlign: 'right', marginTop: '1rem'}}>Total Geral: R$ {total.toFixed(2)}</h3>
 
       {mensagem && (
@@ -1251,7 +1301,7 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
         <h3 className="section-title" style={{margin: 0}}>Ordens de Serviço</h3>
         <button className="btn-primary" onClick={() => setShowNovaOS(true)}>+ Novo Registro</button>
       </div>
-      <table className="data-table">
+      <div style={{overflowX: 'auto'}}><table className="data-table hide-on-mobile-table">
         <thead>
           <tr>
             <th>OS #</th>
@@ -1298,7 +1348,7 @@ const Ordens = ({ clients, repairs, fetchRepairs, businessUnit, inventories, onN
           })}
           {emExecucao.length === 0 && <tr><td colSpan={5}>Nenhuma OS em execução no momento.</td></tr>}
         </tbody>
-      </table>
+      </table></div>
 
       {viewingService && (
         <div className="modal-overlay" onClick={() => setViewingService(null)}>
@@ -1436,45 +1486,45 @@ const Login = ({ onLogin }) => {
       </div>
 
       {/* Lado Direito - Card de Login */}
-      <div style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflowY: 'auto', padding: '2rem'}}>
-        <div className="glass-card" style={{width: '100%', maxWidth: '420px', padding: '2.5rem', boxShadow: '0 20px 40px rgba(0,0,0,0.08)', margin: 'auto'}}>
-          <div style={{textAlign: 'center', marginBottom: '2.5rem'}}>
-            <img src="/logo-oficina.png" alt="Sua Logo" style={{maxHeight: '160px', width: 'auto', marginBottom: '1.5rem', objectFit: 'contain'}} onError={(e) => e.target.style.display = 'none'} />
-            <h2 style={{margin: 0, color: 'var(--text-primary)', fontSize: '1.8rem', fontWeight: 700}}>
+      <div style={{flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', overflowY: 'auto', padding: '1rem'}}>
+        <div className="glass-card" style={{width: '100%', maxWidth: '400px', padding: '2rem', boxShadow: '0 20px 40px rgba(0,0,0,0.08)', margin: 'auto'}}>
+          <div style={{textAlign: 'center', marginBottom: '1.5rem'}}>
+            <img src="/logo-oficina.png" alt="Sua Logo" style={{maxHeight: '100px', width: 'auto', marginBottom: '1rem', objectFit: 'contain'}} onError={(e) => e.target.style.display = 'none'} />
+            <h2 style={{margin: 0, color: 'var(--text-primary)', fontSize: '1.6rem', fontWeight: 700}}>
               {isForgotPassword ? 'Recuperar Senha' : isSignUp ? 'Criar Nova Conta' : 'Acesse sua Conta'}
             </h2>
-            <p style={{color: 'var(--text-secondary)', fontSize: '0.95rem', marginTop: '0.5rem'}}>
+            <p style={{color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '0.5rem'}}>
               {isForgotPassword ? 'Informe seu e-mail' : isSignUp ? 'Preencha os dados abaixo' : 'Informe suas credenciais para continuar'}
             </p>
           </div>
 
         <form onSubmit={handleSubmit}>
           {isSignUp && (
-            <div style={{display: 'flex', gap: '0.5rem', marginBottom: '1rem'}}>
+            <div style={{display: 'flex', gap: '0.5rem', marginBottom: '0.8rem'}}>
               <div style={{flex: 1}}>
-                <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Nome</label>
-                <input type="text" value={nome} onChange={e => setNome(e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
+                <label style={{display: 'block', marginBottom: '0.3rem', fontWeight: 600}}>Nome</label>
+                <input type="text" value={nome} onChange={e => setNome(e.target.value)} style={{width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
               </div>
               <div style={{flex: 1}}>
-                <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Sobrenome</label>
-                <input type="text" value={sobrenome} onChange={e => setSobrenome(e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
+                <label style={{display: 'block', marginBottom: '0.3rem', fontWeight: 600}}>Sobrenome</label>
+                <input type="text" value={sobrenome} onChange={e => setSobrenome(e.target.value)} style={{width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
               </div>
             </div>
           )}
-          <div style={{marginBottom: '1rem'}}>
-            <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>E-mail</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
+          <div style={{marginBottom: '0.8rem'}}>
+            <label style={{display: 'block', marginBottom: '0.3rem', fontWeight: 600}}>E-mail</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={{width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
           </div>
           
           {!isForgotPassword && (
-            <div style={{marginBottom: '1.5rem'}}>
-              <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: 600}}>Senha</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={{width: '100%', padding: '0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
+            <div style={{marginBottom: '1rem'}}>
+              <label style={{display: 'block', marginBottom: '0.3rem', fontWeight: 600}}>Senha</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} style={{width: '100%', padding: '0.7rem', borderRadius: '8px', border: '1px solid #e2e8f0'}} required />
             </div>
           )}
 
           {!isSignUp && !isForgotPassword && (
-             <div style={{textAlign: 'right', marginBottom: '1.5rem', marginTop: '-1rem'}}>
+             <div style={{textAlign: 'right', marginBottom: '1rem', marginTop: '-0.5rem'}}>
                <span style={{fontSize: '0.85rem', color: 'var(--accent-main)', cursor: 'pointer', fontWeight: 600}} onClick={() => { setIsForgotPassword(true); setErro(''); setSucesso(''); }}>Esqueci minha senha</span>
              </div>
           )}
@@ -1542,7 +1592,7 @@ const Estoque = ({ inventories, fetchInventories, businessUnit }) => {
     <div>
       <div className="glass-card" style={{marginBottom: '2rem'}}>
         <h3 className="section-title">Cadastrar Peça ou Serviço</h3>
-        <form onSubmit={handleCreate} style={{display: 'flex', gap: '1rem', alignItems: 'flex-end'}}>
+        <form onSubmit={handleCreate} style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end'}}>
           <div style={{flex: 1}}>
             <label style={{display: 'block', fontSize: '0.8rem', fontWeight: 600}}>Categoria</label>
             <select value={novoItem.categoria} onChange={e => setNovoItem({...novoItem, categoria: e.target.value})} style={{width: '100%', padding: '0.6rem', borderRadius: '6px', border: '1px solid #ccc'}}>
@@ -1568,7 +1618,7 @@ const Estoque = ({ inventories, fetchInventories, businessUnit }) => {
 
       <div className="glass-card">
         <h3 className="section-title">Catálogo de Serviços e Peças</h3>
-        <table className="data-table">
+        <div style={{overflowX: 'auto'}}><table className="data-table hide-on-mobile-table">
           <thead>
             <tr>
               <th>Descrição</th>
@@ -1592,7 +1642,7 @@ const Estoque = ({ inventories, fetchInventories, businessUnit }) => {
             ))}
             {inventories.length === 0 && <tr><td colSpan={5}>Nenhum item cadastrado no momento.</td></tr>}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );
@@ -1664,7 +1714,7 @@ function Configuracoes({ businessUnit }) {
             </div>
             
             <div className="table-container">
-              <table className="data-table">
+              <table className="data-table hide-on-mobile-table">
                 <thead>
                   <tr>
                     <th>Nome</th>
@@ -1695,14 +1745,39 @@ function Configuracoes({ businessUnit }) {
                   {loading && <tr><td colSpan={5} style={{textAlign:'center'}}>Carregando...</td></tr>}
                 </tbody>
               </table>
+      <div className="mobile-card-list show-on-mobile">
+        {clients.map(client => (
+          <div key={client._id || client.id} className="mobile-card-item" onClick={() => setSelectedClient(client)}>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Nome:</span>
+              <span className="mobile-card-value">{client.nome}</span>
+            </div>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Documento:</span>
+              <span className="mobile-card-value">{client.documento}</span>
+            </div>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Telefone:</span>
+              <span className="mobile-card-value">{client.telefone}</span>
+            </div>
+            <div className="mobile-card-row">
+              <span className="mobile-card-label">Perfil:</span>
+              <span className="mobile-card-value"><span className={`badge ${client.creditoAprovado ? 'success' : 'pending'}`}>{client.creditoAprovado ? 'Aprovado' : 'Em Análise'}</span></span>
+            </div>
+            <div className="mobile-card-actions" onClick={e => e.stopPropagation()}>
+               <button className="btn-primary" style={{padding: '0.4rem 0.8rem', fontSize: '0.8rem', background: '#3b82f6', width: '100%'}} onClick={() => setEditingClient(client)}>Editar</button>
+            </div>
+          </div>
+        ))}
+      </div>
             </div>
 
             {showUserModal && (
               <div className="modal-overlay" style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000}}>
-                <div className="modal-content" style={{background: '#fff', padding: '2rem', borderRadius: '12px', width: '500px'}}>
+                <div className="modal-content" style={{background: '#fff', padding: '2rem', borderRadius: '12px', width: '100%', maxWidth: '500px'}}>
                   <h2>Criar Novo Usuário</h2>
                   <form onSubmit={handleCreateUser} style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
-                    <div style={{display: 'flex', gap: '1rem'}}>
+                    <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap'}}>
                        <input className="input-field" placeholder="Nome" required onChange={e => setNewUser({...newUser, firstName: e.target.value})} />
                        <input className="input-field" placeholder="Sobrenome" required onChange={e => setNewUser({...newUser, lastName: e.target.value})} />
                     </div>
@@ -1726,7 +1801,7 @@ function Configuracoes({ businessUnit }) {
                       <option value="admin">Admin</option>
                     </select>
 
-                    <div style={{display: 'flex', gap: '1rem', marginTop: '1rem'}}>
+                    <div style={{display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem'}}>
                       <button type="submit" className="btn btn-primary" style={{flex: 1}}>Salvar</button>
                       <button type="button" className="btn" style={{flex: 1}} onClick={() => setShowUserModal(false)}>Cancelar</button>
                     </div>
@@ -1742,7 +1817,7 @@ function Configuracoes({ businessUnit }) {
             <h2>Logs de Auditoria do Sistema</h2>
             <p style={{color: 'var(--text-secondary)', marginBottom: '1.5rem'}}>Rastreio de todas as ações importantes no sistema.</p>
             <div className="table-container" style={{maxHeight: '600px', overflowY: 'auto'}}>
-              <table className="data-table">
+              <div style={{overflowX: 'auto'}}><table className="data-table hide-on-mobile-table">
                 <thead style={{position: 'sticky', top: 0, background: '#f8fafc'}}>
                   <tr>
                     <th>Data/Hora</th>
@@ -1767,7 +1842,7 @@ function Configuracoes({ businessUnit }) {
                   {logs.length === 0 && !loading && <tr><td colSpan={5} style={{textAlign:'center'}}>Nenhum log registrado ainda</td></tr>}
                   {loading && <tr><td colSpan={5} style={{textAlign:'center'}}>Carregando logs...</td></tr>}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           </div>
         )}
@@ -1778,6 +1853,7 @@ function Configuracoes({ businessUnit }) {
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [globalOpenOS, setGlobalOpenOS] = useState(null);
   const [businessUnit, setBusinessUnit] = useState(localStorage.getItem('unit') || 'OFICINA');
   const [user, setUser] = useState(null);
@@ -1841,13 +1917,14 @@ function App() {
 
   return (
     <div className="app-container">
-      <aside className="sidebar">
+      <div className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="brand" style={{flexDirection: 'column', alignItems: 'center', padding: '1.5rem 1rem', borderBottom: '1px solid #e2e8f0', marginBottom: '1.5rem'}}>
           <img src="/logo-oficina.png" alt="Logo" style={{width: '100%', maxWidth: '240px', objectFit: 'contain'}} onError={(e) => { e.target.style.display = 'none'; }} />
         </div>
         <nav className="nav-menu">
           {navItems.map(item => (
-            <div key={item.id} className={`nav-item ${activeTab === item.id ? 'active' : ''}`} onClick={() => setActiveTab(item.id)}>
+            <div key={item.id} className={`nav-item ${activeTab === item.id ? 'active' : ''}`} onClick={() => { setActiveTab(item.id); setIsSidebarOpen(false); }}>
               <span style={{marginRight: '10px'}}>{item.icon}</span>{item.label}
             </div>
           ))}
@@ -1856,7 +1933,8 @@ function App() {
 
       <main className="main-content">
         <header className="header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-          <div style={{display: 'flex', alignItems: 'center', gap: '2rem'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+            <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>☰</button>
             <h2>{navItems.find(i => i.id === activeTab)?.label}</h2>
             <div className="unit-selector" style={{display: 'flex', gap: '0.5rem', width: '250px', background: '#f1f5f9', padding: '0.3rem', borderRadius: '8px'}}>
               <button style={{flex: 1, padding: '0.5rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, background: businessUnit === 'OFICINA' ? 'var(--accent-main)' : 'transparent', color: businessUnit === 'OFICINA' ? 'white' : 'var(--text-secondary)'}} onClick={() => setBusinessUnit('OFICINA')}>🚗 Oficina</button>
